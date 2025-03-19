@@ -30,6 +30,7 @@ import setproctitle
 import torch
 import uuid
 import datetime
+import wandb
 # from datasets.dataset_generic import Generic_MIL_Dataset
 
 def lecun_fix():
@@ -80,8 +81,14 @@ def parse_args():
         parser = get_parser()
         args = parser.parse_args()
 
+    args.seed = 12
     if args.seed is not None:
         set_random_seed(args.seed)
+
+    args.cam = "excluded"
+    args.debug_mode = 1
+    args.loadonmemory = 0
+    args.test_on_val = False
 
     return args
 
@@ -115,10 +122,19 @@ def main(fold, args=None):
     backbone = dataset.get_backbone()
     loss = dataset.get_loss()
     model = get_model(args, backbone, loss, dataset.get_transform())
+    args.fold = 0
+    dataset.load(args.fold)
     
     # set job name
     # setproctitle.setproctitle('{}_{}_{}'.format(args.model, args.buffer_size if 'buffer_size' in args else 0, args.dataset))     
     setproctitle.setproctitle(f'{args.exp_desc}')
+
+    args.wandb_tag = 'conslide_code'
+    mode = 'disabled' if args.debug_mode else 'online'
+    #mode = 'online'
+    wandb.init(project='miccai_coomil', entity='miccai_coomil', config=vars(args),tags=[args.wandb_tag],
+                   name=str(args.model), mode=mode)
+    args.wandb_url = wandb.run.get_url()
 
     if isinstance(dataset, ContinualDataset):
         train(model, dataset, args, fold)

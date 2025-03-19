@@ -130,7 +130,7 @@ class Generic_WSI_Classification_Dataset(Dataset):
         if len(csv_path) > 0:
             self.slide_data = pd.read_csv(csv_path)
             if args.debug_mode:
-                self.slide_data = self.slide_data[:100] #64
+                self.slide_data = self.slide_data[:64] 
  
 
     def __len__(self):
@@ -166,10 +166,10 @@ class Generic_WSI_Classification_Dataset(Dataset):
         #train_filter = (data["fold"] > 3) & (data["fold"] != fold)
 
         ids = list(range(10))
-        ids.remove(fold[0])
+        ids.remove(fold)
         val_id = np.random.choice(ids,1)[0]
         print('Val fold id:',val_id)
-        print('Test fold id:',fold[0])
+        print('Test fold id:',fold)
         test_filter = data["fold"] == fold
         val_filter = data["fold"] == val_id
         train_filter = (data["fold"] != fold) & (data["fold"] != val_id)

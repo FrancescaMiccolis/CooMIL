@@ -135,8 +135,12 @@ def evaluate(model: ContinualModel, dataset: ContinualDataset, last=False):
                     mask_prob_list.append(mask_prob.cpu().numpy())
                     correct_mask_classes += torch.sum(pred == labels).item()
         # import ipdb;ipdb.set_trace()
-        aucs.append(roc_auc_score(np.array(labels_list), np.concatenate(prob_list)[:, 2*k + 1]))
-        aucs_mask_classes.append(roc_auc_score(np.array(labels_list) - (2*k), np.concatenate(mask_prob_list)[:, 2*k + 1]))
+        try:
+            aucs.append(roc_auc_score(np.array(labels_list), np.concatenate(prob_list)[:, 2*k + 1]))
+            aucs_mask_classes.append(roc_auc_score(np.array(labels_list) - (2*k), np.concatenate(mask_prob_list)[:, 2*k + 1]))
+        except:
+            print('Error in AUC calculation')
+        
         accs.append(correct / total if 'class-il' in model.COMPATIBILITY else 0)
         accs_mask_classes.append(correct_mask_classes / total)
 
@@ -150,7 +154,11 @@ def evaluate(model: ContinualModel, dataset: ContinualDataset, last=False):
     model.net.train(status)
     # import ipdb;ipdb.set_trace()
     if not last:
-        all_aucs = roc_auc_score(np.array(all_labels_list), np.array(all_prob_list), multi_class='ovr')
+        try:
+            all_aucs = roc_auc_score(np.array(all_labels_list), np.array(all_prob_list), multi_class='ovr')
+        except:
+            print('Error in AUC calculation')
+            all_aucs = 0
         return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes, all_aucs]
     else:
         return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes]
@@ -171,7 +179,8 @@ def evaluate_val(model: ContinualModel, dataset: ContinualDataset, k, epoch, res
     # for k, val_loader in enumerate(dataset.val_loader):
     correct, correct_mask_classes, total = 0.0, 0.0, 0.0
     val_loss = 0
-    for data in dataset.val_loader:
+    val_loader= dataset.val_loaders[k]
+    for data in val_loader:
         with torch.no_grad():
             # inputs, labels = data
             # inputs, labels = inputs.to(model.device), labels.to(model.device)
@@ -200,7 +209,7 @@ def evaluate_val(model: ContinualModel, dataset: ContinualDataset, k, epoch, res
                 # _, pred = torch.max(outputs.data, 1)
                 correct_mask_classes += torch.sum(pred == labels).item()
     # import ipdb;ipdb.set_trace()
-    val_loss /= len(dataset.val_loader)
+    val_loss /= len(val_loader)
     auc = roc_auc_score(np.array(labels_list), np.concatenate(prob_list)[:, 2*k + 1])
     acc = correct / total * 100 if 'class-il' in model.COMPATIBILITY else 0
     acc_mask_classes = correct_mask_classes / total * 100
@@ -237,13 +246,13 @@ def train(model: ContinualModel, dataset: ContinualDataset,
     if args.tensorboard:
         tb_logger = TensorboardLogger(args, dataset.SETTING)
 
-    dataset_copy = get_dataset(args)
-    for t in range(dataset.N_TASKS):
-        model.net.train()
-        _, _, _ = dataset_copy.get_data_loaders(fold)
-    if model.NAME != 'icarl' and model.NAME != 'pnn':
-        acc_random_results_class, micro_acc_random_results_class, acc_random_results_task, micro_acc_random_results_task, auc_random_results_class, _, all_auc_random_results_class = evaluate(model, dataset_copy)
-        print(f'Random AUC = {all_auc_random_results_class}')
+    #dataset_copy = get_dataset(args)
+    #for t in range(dataset.N_TASKS):
+    #    model.net.train()
+    #    _, _, _ = dataset_copy.get_data_loaders(fold)
+    #if model.NAME != 'icarl' and model.NAME != 'pnn':
+    #    acc_random_results_class, micro_acc_random_results_class, acc_random_results_task, micro_acc_random_results_task, auc_random_results_class, _, all_auc_random_results_class = evaluate(model, dataset_copy)
+    #    print(f'Random AUC = {all_auc_random_results_class}')
     print(file=sys.stderr)
     if model.NAME != 'joint':
         for t in range(dataset.N_TASKS):
@@ -287,20 +296,22 @@ def train(model: ContinualModel, dataset: ContinualDataset,
 
             for epoch in range(model.args.n_epochs):
                 for i, data in enumerate(train_loader):
-                    if hasattr(dataset.train_loader.dataset, 'logits'):
-                        inputs0, inputs1, labels, logits = data
-                        inputs0, inputs1, labels, logits = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device), logits.to(model.device)
-                        loss = model.observe(inputs0, inputs1, labels, logits)
-                    else:
-                        inputs0, inputs1, labels = data
-                        inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
-                        loss = model.observe(inputs0, inputs1, labels, t, ssl=False)
+                    #if hasattr(dataset.train_loader.dataset, 'logits'):
+                    #    inputs0, inputs1, labels, logits = data
+                    #    inputs0, inputs1, labels, logits = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device), logits.to(model.device)
+                    #    loss = model.observe(inputs0, inputs1, labels, logits)
+                    #else:
+                    #    inputs0, inputs1, labels = data
+                    #    inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
+                    #    loss = model.observe(inputs0, inputs1, labels, t, ssl=False)
+                    inputs0, inputs1, labels = data
+                    inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
+                    loss = model.observe(inputs0, inputs1, labels, t, ssl=False)
 
                     progress_bar(i, len(train_loader), epoch, t, loss, fold)
 
                     if args.tensorboard:
                         tb_logger.log_loss(loss, args, epoch, t, i)
-                # stop = evaluate_val(model, dataset, t, epoch=epoch, results_dir=results_dir, early_stopping=early_stopping)
                 stop = evaluate_val(model, dataset, t, epoch=epoch, results_dir=results_dir, early_stopping=early_stopping)
                 if stop:
                     break
@@ -394,10 +405,10 @@ def train(model: ContinualModel, dataset: ContinualDataset,
         # import ipdb;ipdb.set_trace()
         csv_logger.add_bwt(acc_results, acc_results_mask_classes, auc_results)
         csv_logger.add_forgetting(acc_results, acc_results_mask_classes, auc_results)
-        if model.NAME != 'icarl' and model.NAME != 'pnn':
-            csv_logger.add_fwt(acc_results, acc_random_results_class,
-                               acc_results_mask_classes, acc_random_results_task,
-                               auc_results, auc_random_results_class)
+        #if model.NAME != 'icarl' and model.NAME != 'pnn':
+        #    csv_logger.add_fwt(acc_results, acc_random_results_class,
+        #                       acc_results_mask_classes, acc_random_results_task,
+        #                       auc_results, auc_random_results_class)
 
     if args.tensorboard:
         tb_logger.close()

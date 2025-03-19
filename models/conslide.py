@@ -7,7 +7,7 @@ from einops import rearrange
 import math
 import numpy as np
 import bisect
-
+import wandb
 
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser(description='Continual learning via'
@@ -36,6 +36,7 @@ class ConSlide(ContinualModel):
             self.opt.zero_grad()
             outputs = self.net([inputs0, inputs1])
             loss = 0.001 * outputs[-1].mean()
+            wandb.log({'ssl_loss': loss.item()})
             loss.backward()
             self.opt.step()
         else:
@@ -43,8 +44,8 @@ class ConSlide(ContinualModel):
             outputs = self.net([inputs0, inputs1])
 
             loss = self.loss(outputs[0], labels) + 0.00001 * outputs[-1].mean()
+            wandb.log({'loss': loss.item()})
             
-
             if not self.buffer.is_empty():
                 t = np.random.randint(task)
                 size = np.random.randint(100, 250)
@@ -63,10 +64,11 @@ class ConSlide(ContinualModel):
     def save_buffer(self, inputs0, inputs1, labels, task):
 
         self.opt.zero_grad()
-        if inputs0.shape[0] > 1:
+        if inputs0.shape[1] > 1:
             with torch.no_grad():
                 outputs = self.net([inputs0, inputs1])
-                
+                inputs0 = inputs0.squeeze(0)
+                inputs1 = inputs1.squeeze(0)
                 # Add instance-level feat to buffer
                 region_attention_score = outputs[-2].squeeze()
                 region_attention_score = 1 / region_attention_score

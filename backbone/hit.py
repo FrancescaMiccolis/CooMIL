@@ -401,15 +401,15 @@ class HIT(nn.Module):
 
 
         self.skimpre = nn.Sequential(
-            nn.LayerNorm(768),
-            nn.Linear(768, 128),
+            nn.LayerNorm(512),
+            nn.Linear(512, 128),
             nn.LayerNorm(128),
             nn.GELU(),
             nn.Linear(128, 2),
         )
 
-        self.fc1 = nn.Sequential(nn.Linear(768, inner_dim), nn.ReLU())
-        self.fc2 = nn.Sequential(nn.Linear(768, inner_dim), nn.ReLU())
+        self.fc1 = nn.Sequential(nn.Linear(512, inner_dim), nn.ReLU())
+        self.fc2 = nn.Sequential(nn.Linear(512, inner_dim), nn.ReLU())
 
         init_skim_predictor([self.skimpre[-1]])
 
@@ -529,6 +529,9 @@ class HIT(nn.Module):
         x = input[0]
         x2 = input[1]
         # import ipdb;ipdb.set_trace()
+
+        x = x.squeeze(0).squeeze(0)
+        x2 = x2.squeeze(0).squeeze(0)
 
         x = rearrange(x, 'B H W C -> B (H W) C')
         x = self.fc1(x)
