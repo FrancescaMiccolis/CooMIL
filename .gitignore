@@ -1,1 +1,3 @@
 launch.sh
+*.pyc
+*./__pycache__
