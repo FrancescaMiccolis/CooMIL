@@ -142,13 +142,13 @@ class Generic_WSI_Classification_Dataset(Dataset):
             data.labels= data.labels-2
         return data
 
-    def return_splits(self, fold):
+    def return_splits(self):
         data = pd.DataFrame(self.slide_data)
         data=self.reset_label(data)
         if self.args.debug_mode:
             train_ids, val_ids, test_ids = self.generate_split_debug(data)
         else:
-            train_ids, val_ids, test_ids = self.generate_split(data, fold, self.seed)
+            train_ids, val_ids, test_ids = self.generate_split(data, self.args.fold[0], self.seed)
         assert len(set(train_ids).intersection(val_ids)) == 0
         assert len(set(val_ids).intersection(test_ids)) == 0
 
@@ -168,13 +168,13 @@ class Generic_WSI_Classification_Dataset(Dataset):
         #train_filter = (data["fold"] > 3) & (data["fold"] != fold)
 
         ids = list(range(10))
-        ids.remove(fold)
+        ids.remove(self.args.fold[0])
         val_id = np.random.choice(ids,1)[0]
         print('Val fold id:',val_id)
-        print('Test fold id:',fold)
-        test_filter = data["fold"] == fold
+        print('Test fold id:',self.args.fold[0])
+        test_filter = data["fold"] == self.args.fold[0]
         val_filter = data["fold"] == val_id
-        train_filter = (data["fold"] != fold) & (data["fold"] != val_id)
+        train_filter = (data["fold"] != self.args.fold[0]) & (data["fold"] != val_id)
 
         test_ids = data[test_filter].index
         val_ids = data[val_filter].index
@@ -755,7 +755,7 @@ class CamDataset(Dataset):
     def __getitem__(self, idx):
         pass
 
-    def return_splits(self, fold):
+    def return_splits(self):
         """
         Return the dataset split.
 
@@ -872,7 +872,7 @@ class Sequential_Generic_MIL_Dataset(ContinualDataset):
             self.class_names = ["Breast Invasive ductal","Breast Invasive lobular"]
             self.task_names = [ "Breast"]
 
-    def load(self,fold):
+    def load(self):
         print("Loading data")
         self.test_loaders = []
         self.train_loaders = []
@@ -881,7 +881,7 @@ class Sequential_Generic_MIL_Dataset(ContinualDataset):
             self.train_datasets= []
         for n in range(len(self.datasets)):
             dataset = self.datasets[n]
-            train_dataset, val_dataset, test_dataset = dataset.return_splits(fold)
+            train_dataset, val_dataset, test_dataset = dataset.return_splits()
             print("---------------------------------")
             print_summary(train_dataset.slide_data, "train")
             print_summary(val_dataset.slide_data, "val")

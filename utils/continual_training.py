@@ -12,7 +12,7 @@ from utils.tb_logger import *
 from utils.status import create_fake_stash
 from models.utils.continual_model import ContinualModel
 from argparse import Namespace
-
+import wandb 
 
 def evaluate(model: ContinualModel, dataset) -> float:
     """
@@ -75,6 +75,7 @@ def train(args: Namespace):
 
     acc = evaluate(model, dataset)
     print('Accuracy:', acc)
+    wandb.log({'Accuracy': acc})
 
     if args.csv_log:
         csv_logger.log(acc)

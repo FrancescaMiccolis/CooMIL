@@ -1,4 +1,12 @@
 launch.sh
+# Ignore compiled Python files
 *.pyc
-*./__pycache__*
-*/*/*.pyc
+*.pyo
+*.pyd
+
+# Ignore __pycache__ directories
+__pycache__/
+**/__pycache__/
+
+# Ignore wandb folder
+wandb/

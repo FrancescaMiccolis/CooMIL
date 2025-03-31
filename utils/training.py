@@ -14,7 +14,8 @@ from datasets.utils.continual_dataset import ContinualDataset
 from typing import Tuple
 from datasets import get_dataset
 import sys
-from sklearn.metrics import roc_auc_score, roc_curve
+import wandb
+from sklearn.metrics import roc_auc_score, f1_score
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -42,6 +43,7 @@ class EarlyStopping:
         score = -val_loss
         if epoch >= start_epoch - 1:
             if self.best_score is None:
+                self.best_epoch = epoch
                 self.best_score = score
                 self.save_checkpoint(val_loss, model, ckpt_name)
             elif score < self.best_score:
@@ -50,10 +52,11 @@ class EarlyStopping:
                 if self.counter >= self.patience or epoch > self.stop_epoch:
                     self.early_stop = True
             else:
+                self.best_epoch = epoch
                 self.best_score = score
                 self.save_checkpoint(val_loss, model, ckpt_name)
                 self.counter = 0
-
+        wandb.log({"best_epoch": self.best_epoch})
     def save_checkpoint(self, val_loss, model, ckpt_name):
         '''Saves model when validation loss decrease.'''
         if self.verbose:
@@ -161,8 +164,9 @@ def evaluate(model: ContinualModel, dataset: ContinualDataset, last=False):
             all_aucs = 0
         return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes, all_aucs]
     else:
+        wandb.log({"all_auc": all_aucs,"accs": accs, "micro_acc": micro_acc, "accs_mask_classes": accs_mask_classes, "micro_acc_mask_classes": micro_acc_mask_classes})
         return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes]
-
+        
 loss_fn = nn.CrossEntropyLoss()
 def evaluate_val(model: ContinualModel, dataset: ContinualDataset, k, epoch, results_dir, early_stopping = None):
     """
@@ -213,10 +217,16 @@ def evaluate_val(model: ContinualModel, dataset: ContinualDataset, k, epoch, res
     auc = roc_auc_score(np.array(labels_list), np.concatenate(prob_list)[:, 2*k + 1])
     acc = correct / total * 100 if 'class-il' in model.COMPATIBILITY else 0
     acc_mask_classes = correct_mask_classes / total * 100
-
+    f1_score_val = f1_score(np.array(labels_list), [round(x) for x in np.concatenate(prob_list)[:, 2*k + 1]], average='weighted')
     model.net.train(status)
     print(f'\t auc = {auc}')
-
+    wandb.log({"val/auc": auc,
+               "val/acc": acc,
+               "val/acc_mask_classes": acc_mask_classes,
+               "val/loss": val_loss,
+               "val/epoch": epoch,
+               "val/f1_score": f1_score_val,
+               })
     if early_stopping:
         early_stopping(epoch, val_loss, model, ckpt_name = os.path.join(results_dir, f"task{k}_checkpoint.pt"))
         
@@ -228,7 +238,7 @@ def evaluate_val(model: ContinualModel, dataset: ContinualDataset, k, epoch, res
 
 
 def train(model: ContinualModel, dataset: ContinualDataset,
-          args: Namespace, fold) -> None:
+          args: Namespace) -> None:
     """
     The training process, including evaluations and loggers.
     :param model: the module to be trained
@@ -242,7 +252,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
 
     # import ipdb;ipdb.set_trace()
     if args.csv_log:
-        csv_logger = CsvLogger(dataset.SETTING, dataset.NAME, model.NAME, fold, args.exp_desc)
+        csv_logger = CsvLogger(dataset.SETTING, dataset.NAME, model.NAME, args.fold[0], args.exp_desc)
     if args.tensorboard:
         tb_logger = TensorboardLogger(args, dataset.SETTING)
 
@@ -263,7 +273,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                 os.makedirs(results_dir)
 
             model.net.train()
-            train_loader, val_loader, test_loader = dataset.get_data_loaders(fold)
+            train_loader, val_loader, test_loader = dataset.get_data_loaders(args.fold[0])
             if hasattr(model, 'begin_task'):
                 # import ipdb;ipdb.set_trace()
                 model.begin_task(dataset)
@@ -291,7 +301,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                             inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
                             loss += model.observe(inputs0, inputs1, labels, t, ssl=True)
 
-                            progress_bar(i, len(train_loader), epoch, t, loss, fold)
+                            progress_bar(i, len(train_loader), epoch, t, loss, args.fold[0])
                         print(f'SSL Loss: {loss}')
 
             for epoch in range(model.args.n_epochs):
@@ -300,7 +310,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                     inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
                     loss = model.observe(inputs0, inputs1, labels, t, ssl=False)
 
-                    progress_bar(i, len(train_loader), epoch, t, loss, fold)
+                    progress_bar(i, len(train_loader), epoch, t, loss, args.fold[0])
 
                     if args.tensorboard:
                         tb_logger.log_loss(loss, args, epoch, t, i)
@@ -356,9 +366,9 @@ def train(model: ContinualModel, dataset: ContinualDataset,
             if args.tensorboard:
                 tb_logger.log_accuracy(np.array(accs), mean_acc, args, t)
     else:
-        _, _, _ = dataset.get_joint_data_loaders(fold)
+        _, _, _ = dataset.get_joint_data_loaders(args.fold[0])
         if hasattr(model, 'end_task'):
-            model.end_task(dataset, fold)
+            model.end_task(dataset, args.fold[0])
         accs = evaluate(model, dataset)
             # import ipdb;ipdb.set_trace()
         acc_results.append(accs[0])
