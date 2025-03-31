@@ -33,6 +33,7 @@ from backbone.hit import HIT
 from backbone.transmil import TransMIL
 from backbone.dsmil import FCLayer, BClassifier, MILNet
 import random
+from sklearn.model_selection import train_test_split
 
 def seed_worker(worker_id):
     # Generate a seed for the worker based on the initial seed
@@ -129,8 +130,6 @@ class Generic_WSI_Classification_Dataset(Dataset):
         self.data_dir = None
         if len(csv_path) > 0:
             self.slide_data = pd.read_csv(csv_path)
-            if args.debug_mode:
-                self.slide_data = self.slide_data[:64] 
  
 
     def __len__(self):
@@ -146,7 +145,10 @@ class Generic_WSI_Classification_Dataset(Dataset):
     def return_splits(self, fold):
         data = pd.DataFrame(self.slide_data)
         data=self.reset_label(data)
-        train_ids, val_ids, test_ids = self.generate_split(data, fold, self.seed)
+        if self.args.debug_mode:
+            train_ids, val_ids, test_ids = self.generate_split_debug(data)
+        else:
+            train_ids, val_ids, test_ids = self.generate_split(data, fold, self.seed)
         assert len(set(train_ids).intersection(val_ids)) == 0
         assert len(set(val_ids).intersection(test_ids)) == 0
 
@@ -178,6 +180,27 @@ class Generic_WSI_Classification_Dataset(Dataset):
         val_ids = data[val_filter].index
         train_ids = data[train_filter].index
         return train_ids, val_ids, test_ids
+
+
+    def split_indices(self, df):
+        train_idx, temp_idx = train_test_split(df.index, test_size=0.3, random_state=42)
+        val_idx, test_idx = train_test_split(temp_idx, test_size=0.5, random_state=42)
+        return train_idx, val_idx, test_idx
+
+    def generate_split_debug(self, data):
+        vals = np.unique(data['labels'].values)
+        class_A = data[self.slide_data['labels'] == vals[0]][:30]
+        class_B = data[self.slide_data['labels'] == vals[1]][:30]
+        train_ids_A, val_ids_A, test_ids_A = self.split_indices(class_A)
+        train_ids_B, val_ids_B, test_ids_B = self.split_indices(class_B)
+
+        train_ids = list(train_ids_A) + list(train_ids_B)
+        val_ids = list(val_ids_A) + list(val_ids_B)
+        test_ids = list(test_ids_A) + list(test_ids_B)
+
+        return train_ids, val_ids, test_ids
+        
+
 
 # class Generic_WSI_Classification_Dataset(Dataset):
 #     def __init__(self,
@@ -547,6 +570,7 @@ class Generic_Split(Generic_MIL_Dataset):
         self.slide_data = slide_data
         self.data_dir = data_dir
         self.slides = []
+
         if args.loadonmemory:
             for idx, slide in tqdm.tqdm(enumerate(self.slide_data["slide"].values)):
                 #slide = slide.replace(" ", "")

@@ -296,14 +296,6 @@ def train(model: ContinualModel, dataset: ContinualDataset,
 
             for epoch in range(model.args.n_epochs):
                 for i, data in enumerate(train_loader):
-                    #if hasattr(dataset.train_loader.dataset, 'logits'):
-                    #    inputs0, inputs1, labels, logits = data
-                    #    inputs0, inputs1, labels, logits = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device), logits.to(model.device)
-                    #    loss = model.observe(inputs0, inputs1, labels, logits)
-                    #else:
-                    #    inputs0, inputs1, labels = data
-                    #    inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
-                    #    loss = model.observe(inputs0, inputs1, labels, t, ssl=False)
                     inputs0, inputs1, labels = data
                     inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
                     loss = model.observe(inputs0, inputs1, labels, t, ssl=False)
