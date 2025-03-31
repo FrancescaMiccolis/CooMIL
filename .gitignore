@@ -2,4 +2,4 @@ launch.sh
 *.pyc
 *./__pycache__*
 */*/*.pyc
-lanch.sh
+launch.sh
