@@ -217,7 +217,7 @@ def evaluate_val(model: ContinualModel, dataset: ContinualDataset, k, epoch, res
     auc = roc_auc_score(np.array(labels_list), np.concatenate(prob_list)[:, 2*k + 1])
     acc = correct / total * 100 if 'class-il' in model.COMPATIBILITY else 0
     acc_mask_classes = correct_mask_classes / total * 100
-    f1_score_val = f1_score(np.array(labels_list), np.concatenate(prob_list)[:, 2*k + 1], average='weighted')
+    f1_score_val = f1_score(np.array(labels_list), [round(x) for x in np.concatenate(prob_list)[:, 2*k + 1]], average='weighted')
     model.net.train(status)
     print(f'\t auc = {auc}')
     wandb.log({"val/auc": auc,
@@ -238,7 +238,7 @@ def evaluate_val(model: ContinualModel, dataset: ContinualDataset, k, epoch, res
 
 
 def train(model: ContinualModel, dataset: ContinualDataset,
-          args: Namespace, fold) -> None:
+          args: Namespace) -> None:
     """
     The training process, including evaluations and loggers.
     :param model: the module to be trained
@@ -252,7 +252,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
 
     # import ipdb;ipdb.set_trace()
     if args.csv_log:
-        csv_logger = CsvLogger(dataset.SETTING, dataset.NAME, model.NAME, fold, args.exp_desc)
+        csv_logger = CsvLogger(dataset.SETTING, dataset.NAME, model.NAME, args.fold[0], args.exp_desc)
     if args.tensorboard:
         tb_logger = TensorboardLogger(args, dataset.SETTING)
 
@@ -273,7 +273,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                 os.makedirs(results_dir)
 
             model.net.train()
-            train_loader, val_loader, test_loader = dataset.get_data_loaders(fold)
+            train_loader, val_loader, test_loader = dataset.get_data_loaders(args.fold[0])
             if hasattr(model, 'begin_task'):
                 # import ipdb;ipdb.set_trace()
                 model.begin_task(dataset)
@@ -301,7 +301,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                             inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
                             loss += model.observe(inputs0, inputs1, labels, t, ssl=True)
 
-                            progress_bar(i, len(train_loader), epoch, t, loss, fold)
+                            progress_bar(i, len(train_loader), epoch, t, loss, args.fold[0])
                         print(f'SSL Loss: {loss}')
 
             for epoch in range(model.args.n_epochs):
@@ -310,7 +310,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                     inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
                     loss = model.observe(inputs0, inputs1, labels, t, ssl=False)
 
-                    progress_bar(i, len(train_loader), epoch, t, loss, fold)
+                    progress_bar(i, len(train_loader), epoch, t, loss, args.fold[0])
 
                     if args.tensorboard:
                         tb_logger.log_loss(loss, args, epoch, t, i)
@@ -366,9 +366,9 @@ def train(model: ContinualModel, dataset: ContinualDataset,
             if args.tensorboard:
                 tb_logger.log_accuracy(np.array(accs), mean_acc, args, t)
     else:
-        _, _, _ = dataset.get_joint_data_loaders(fold)
+        _, _, _ = dataset.get_joint_data_loaders(args.fold[0])
         if hasattr(model, 'end_task'):
-            model.end_task(dataset, fold)
+            model.end_task(dataset, args.fold[0])
         accs = evaluate(model, dataset)
             # import ipdb;ipdb.set_trace()
         acc_results.append(accs[0])
