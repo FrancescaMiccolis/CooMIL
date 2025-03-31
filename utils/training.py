@@ -165,7 +165,8 @@ def evaluate(model: ContinualModel, dataset: ContinualDataset, last=False):
             all_aucs = 0
         return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes, all_aucs]
     else:
-        wandb.log({"all_auc": all_aucs,"accs": accs, "micro_acc": micro_acc, "accs_mask_classes": accs_mask_classes, "micro_acc_mask_classes": micro_acc_mask_classes})
+        wandb.log({"all_auc": aucs,"accs": accs, "aucs_mask_classes": aucs_mask_classes, "micro_acc": micro_acc, "accs_mask_classes": accs_mask_classes, "micro_acc_mask_classes": micro_acc_mask_classes})
+        wandb.log({"all_auc": aucs,"accs": accs,  "micro_acc": micro_acc, "accs_mask_classes": accs_mask_classes, "micro_acc_mask_classes": micro_acc_mask_classes})
         return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes]
         
 loss_fn = nn.CrossEntropyLoss()
