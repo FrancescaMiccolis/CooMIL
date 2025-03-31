@@ -56,7 +56,8 @@ class EarlyStopping:
                 self.best_score = score
                 self.save_checkpoint(val_loss, model, ckpt_name)
                 self.counter = 0
-        wandb.log({"best_epoch": self.best_epoch})
+        
+        wandb.log({"Epoch": epoch})
     def save_checkpoint(self, val_loss, model, ckpt_name):
         '''Saves model when validation loss decrease.'''
         if self.verbose:
