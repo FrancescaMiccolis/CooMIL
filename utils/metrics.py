@@ -29,6 +29,11 @@ def forgetting(results):
     li = list()
     for i in range(n_tasks - 1):
         results[i] += [0.0] * (n_tasks - len(results[i]))
+
+    max_length = max(len(lst) for lst in results)
+    if (len(results[-1])!=max_length):
+        results[-1].append(results[-1][-1])
+
     np_res = np.array(results)
     maxx = np.max(np_res, axis=0)
     for i in range(n_tasks - 1):

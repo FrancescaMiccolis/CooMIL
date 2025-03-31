@@ -6,7 +6,7 @@
 import numpy # needed (don't change it)
 import importlib
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import sys
 import socket
 main_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -122,14 +122,14 @@ def main(fold, args=None):
     backbone = dataset.get_backbone()
     loss = dataset.get_loss()
     model = get_model(args, backbone, loss, dataset.get_transform())
-    args.fold = 0
+    args.fold = fold
     dataset.load(args.fold)
     
     # set job name
     # setproctitle.setproctitle('{}_{}_{}'.format(args.model, args.buffer_size if 'buffer_size' in args else 0, args.dataset))     
     setproctitle.setproctitle(f'{args.exp_desc}')
 
-    args.wandb_tag = 'conslide_code'
+    args.wandb_tag = args.model
     mode = 'disabled' if args.debug_mode else 'online'
     #mode = 'online'
     wandb.init(project='miccai_coomil', entity='miccai_coomil', config=vars(args),tags=[args.wandb_tag],
