@@ -143,7 +143,7 @@ if __name__ == '__main__':
     experiments = []
     experiments += get_experiments(args)
     executor = submitit.AutoExecutor(folder=args.logfolder,slurm_max_num_timeout=30)
-    executor.update_parameters(mem_gb=64, slurm_gpus_per_task=1, tasks_per_node=1, cpus_per_task=1, nodes=1,
+    executor.update_parameters(mem_gb=128, slurm_gpus_per_task=1, tasks_per_node=1, cpus_per_task=1, nodes=1,
                                slurm_additional_parameters={"cpus-per-task": 1, "account": "h2020deciderficarra", "exclude": ""},
                                timeout_min=300,
                                slurm_partition="all_usr_prod", slurm_signal_delay_s=300, slurm_array_parallelism=7)

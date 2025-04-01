@@ -16,3 +16,6 @@ checkpoints/
 
 #Ignore experiments
 utils/experiments.py
+
+#Ignore results
+results/

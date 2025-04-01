@@ -2,7 +2,7 @@
 # All rights reserved.
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
-
+import copy
 import torch
 from utils.status import progress_bar, create_stash
 from utils.tb_logger import *
@@ -257,6 +257,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
         tb_logger = TensorboardLogger(args, dataset.SETTING)
 
     dataset_copy = get_dataset(args)
+    dataset_copy.load()
     for t in range(dataset.N_TASKS):
         model.net.train()
         _, _, _ = dataset_copy.get_data_loaders(args.fold[0])
