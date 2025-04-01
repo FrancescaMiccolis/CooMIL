@@ -250,26 +250,24 @@ def train(model: ContinualModel, dataset: ContinualDataset,
     model.net.to(model.device)
     acc_results, micro_acc_results, acc_results_mask_classes, micro_acc_results_mask_classes = [], [], [], []
     auc_results = []
-    # early_stopping = EarlyStopping(patience = 20, stop_epoch=30, verbose = True)
 
-    # import ipdb;ipdb.set_trace()
     if args.csv_log:
         csv_logger = CsvLogger(dataset.SETTING, dataset.NAME, model.NAME, args.fold[0], args.exp_desc)
     if args.tensorboard:
         tb_logger = TensorboardLogger(args, dataset.SETTING)
 
-    #dataset_copy = get_dataset(args)
-    #for t in range(dataset.N_TASKS):
-    #    model.net.train()
-    #    _, _, _ = dataset_copy.get_data_loaders(fold)
-    #if model.NAME != 'icarl' and model.NAME != 'pnn':
-    #    acc_random_results_class, micro_acc_random_results_class, acc_random_results_task, micro_acc_random_results_task, auc_random_results_class, _, all_auc_random_results_class = evaluate(model, dataset_copy)
-    #    print(f'Random AUC = {all_auc_random_results_class}')
+    dataset_copy = get_dataset(args)
+    for t in range(dataset.N_TASKS):
+        model.net.train()
+        _, _, _ = dataset_copy.get_data_loaders(args.fold[0])
+    if model.NAME != 'icarl' and model.NAME != 'pnn':
+       acc_random_results_class, micro_acc_random_results_class, acc_random_results_task, micro_acc_random_results_task, auc_random_results_class, _, all_auc_random_results_class = evaluate(model, dataset_copy)
+       print(f'Random AUC = {all_auc_random_results_class}')
     print(file=sys.stderr)
     if model.NAME != 'joint':
         for t in range(dataset.N_TASKS):
             early_stopping = EarlyStopping(patience=10, stop_epoch=10, verbose=True)
-            # results_dir = f'./check_points/{model.NAME}'
+
             results_dir = f'./checkpoints/{args.exp_desc}'
             if not os.path.exists(results_dir):
                 os.makedirs(results_dir)
@@ -277,11 +275,11 @@ def train(model: ContinualModel, dataset: ContinualDataset,
             model.net.train()
             train_loader, val_loader, test_loader = dataset.get_data_loaders(args.fold[0])
             if hasattr(model, 'begin_task'):
-                # import ipdb;ipdb.set_trace()
+  
                 model.begin_task(dataset)
             if t:
                 accs = evaluate(model, dataset, last=True)
-                # import ipdb;ipdb.set_trace()
+
                 acc_results[t-1] = acc_results[t-1] + accs[0]
                 auc_results[t-1] = auc_results[t-1] + accs[2]
                 if dataset.SETTING == 'class-il':
@@ -289,11 +287,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                     # auc_results_mask_classes[t-1] = auc_results_mask_classes[t-1] + accs[3]
 
             scheduler = dataset.get_scheduler(model, args)
-            # import ipdb;ipdb.set_trace()
-            # val_accs = evaluate_val(model, dataset, t)
-            # import ipdb;ipdb.set_trace()
 
-            # accs = evaluate(model, dataset)
             if 1:
                 if t == 0:
                     for epoch in range(10):
@@ -325,7 +319,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
 
             # Add buffer data
             if hasattr(model, 'save_buffer'):
-                # for epoch in range(model.args.n_epochs):
+
                 for i, data in enumerate(train_loader):
                     inputs0, inputs1, labels = data
                     inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
@@ -335,7 +329,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                 model.end_task(dataset)
 
             accs = evaluate(model, dataset)
-            # import ipdb;ipdb.set_trace()
+
             acc_results.append(accs[0])
             micro_acc_results.append(accs[1])
             auc_results.append(accs[5])
@@ -353,14 +347,14 @@ def train(model: ContinualModel, dataset: ContinualDataset,
             print(f'multi-classes auc:  {accs[6]}')
             print('\n')
 
-            # import ipdb;ipdb.set_trace()
+
             mean_acc = np.mean(accs[0])
             micro_acc = accs[1]
             mean_acc_mask = np.mean(accs[2])
             micro_acc_mask = accs[3]
             mean_auc = np.mean(accs[5])
             multi_class_auc = accs[6]
-            # import ipdb;ipdb.set_trace()
+  
             # print_mean_accuracy(mean_acc, t + 1, dataset.SETTING)
 
             if args.csv_log:
@@ -372,7 +366,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
         if hasattr(model, 'end_task'):
             model.end_task(dataset, args.fold[0])
         accs = evaluate(model, dataset)
-            # import ipdb;ipdb.set_trace()
+
         acc_results.append(accs[0])
         micro_acc_results.append(accs[1])
         auc_results.append(accs[5])
@@ -390,14 +384,14 @@ def train(model: ContinualModel, dataset: ContinualDataset,
         print(f'multi-classes auc:  {accs[6]}')
         print('\n')
 
-        # import ipdb;ipdb.set_trace()
+
         mean_acc = np.mean(accs[0])
         micro_acc = accs[1]
         mean_acc_mask = np.mean(accs[2])
         micro_acc_mask = accs[3]
         mean_auc = np.mean(accs[5])
         multi_class_auc = accs[6]
-        # import ipdb;ipdb.set_trace()
+
         # print_mean_accuracy(mean_acc, t + 1, dataset.SETTING)
 
         if args.csv_log:
@@ -406,13 +400,13 @@ def train(model: ContinualModel, dataset: ContinualDataset,
             tb_logger.log_accuracy(np.array(accs), mean_acc, args, t)
 
     if args.csv_log:
-        # import ipdb;ipdb.set_trace()
+
         csv_logger.add_bwt(acc_results, acc_results_mask_classes, auc_results)
         csv_logger.add_forgetting(acc_results, acc_results_mask_classes, auc_results)
-        #if model.NAME != 'icarl' and model.NAME != 'pnn':
-        #    csv_logger.add_fwt(acc_results, acc_random_results_class,
-        #                       acc_results_mask_classes, acc_random_results_task,
-        #                       auc_results, auc_random_results_class)
+        if model.NAME != 'icarl' and model.NAME != 'pnn':
+           csv_logger.add_fwt(acc_results, acc_random_results_class,
+                              acc_results_mask_classes, acc_random_results_task,
+                              auc_results, auc_random_results_class)
 
     if args.tensorboard:
         tb_logger.close()
