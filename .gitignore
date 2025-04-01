@@ -13,3 +13,6 @@ wandb/
 
 #Ignore checkpoints
 checkpoints/
+
+#Ignore experiments
+utils/experiments.py
