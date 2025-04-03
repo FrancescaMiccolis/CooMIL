@@ -21,4 +21,4 @@ utils/experiments.py
 results/
 
 #Ignore main
-main.py
+utils/main.py
