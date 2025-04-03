@@ -67,12 +67,12 @@ class EwcOn(ContinualModel):
 
         self.checkpoint = self.net.get_params().data.clone()
 
-    def observe(self, inputs, labels, not_aug_inputs):
+    def observe(self, inputs0, inputs1, labels, not_aug_inputs=None):
 
         self.opt.zero_grad()
-        outputs = self.net(inputs)
+        outputs = self.net([inputs0, inputs1])
         penalty = self.penalty()
-        loss = self.loss(outputs, labels) + self.args.e_lambda * penalty
+        loss = self.loss(outputs[0], labels) + self.args.e_lambda * penalty
         assert not torch.isnan(loss)
         loss.backward()
         self.opt.step()
