@@ -330,7 +330,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                     model.save_buffer(inputs0, inputs1, labels, t)
 
             if hasattr(model, 'end_task'):
-                model.end_task(dataset)
+                model.end_task(train_loader)
 
             accs = evaluate(model, dataset)
 
