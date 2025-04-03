@@ -38,7 +38,7 @@ class EarlyStopping:
         self.early_stop = False
         self.val_loss_min = np.Inf
 
-    def __call__(self, epoch, val_loss, model, ckpt_name = 'checkpoint.pt', start_epoch=6):
+    def __call__(self, epoch, val_loss, model, ckpt_name = 'checkpoint.pt', start_epoch=2):
 
         score = -val_loss
         if epoch >= start_epoch - 1:
@@ -164,9 +164,9 @@ def evaluate(model: ContinualModel, dataset: ContinualDataset, last=False):
         except:
             print('Error in AUC calculation')
             all_aucs = 0
-        return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes, all_aucs,f1_score_val]
+        return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes, all_aucs]
     else:
-        return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes, f1_score_val]
+        return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes]
         
 loss_fn = nn.CrossEntropyLoss()
 def evaluate_val(model: ContinualModel, dataset: ContinualDataset, k, epoch, results_dir, early_stopping = None):
@@ -330,7 +330,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                     model.save_buffer(inputs0, inputs1, labels, t)
 
             if hasattr(model, 'end_task'):
-                model.end_task(dataset)
+                model.end_task(train_loader)
 
             accs = evaluate(model, dataset)
 

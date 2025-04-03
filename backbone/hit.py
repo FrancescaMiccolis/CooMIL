@@ -427,6 +427,19 @@ class HIT(nn.Module):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
 
+    def get_params(self):
+        """
+        Returns a single tensor containing all model parameters concatenated together.
+        """
+        return torch.cat([p.view(-1) for p in self.parameters() if p.requires_grad])
+
+    def get_grads(self):
+        """
+        Returns a single tensor containing all model gradients concatenated together.
+        """
+        return torch.cat([p.grad.view(-1) if p.grad is not None else torch.zeros_like(p.view(-1))
+                          for p in self.parameters() if p.requires_grad])
+
     @torch.jit.ignore
     def no_weight_decay(self):
         return {'outer_pos', 'inner_pos', 'cls_token'}

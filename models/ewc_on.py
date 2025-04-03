@@ -41,23 +41,23 @@ class EwcOn(ContinualModel):
             penalty = (self.fish * ((self.net.get_params() - self.checkpoint) ** 2)).sum()
             return penalty
 
-    def end_task(self, dataset):
+    def end_task(self, train_loader):
         fish = torch.zeros_like(self.net.get_params())
 
-        for j, data in enumerate(dataset.train_loader):
-            inputs, labels, _ = data
-            inputs, labels = inputs.to(self.device), labels.to(self.device)
-            for ex, lab in zip(inputs, labels):
+        for j, data in enumerate(train_loader):
+            inputs0, inputs1, labels = data
+            inputs0, inputs1, labels = inputs0.to(self.device), inputs1.to(self.device), labels.to(self.device)
+            for ex0, ex1, lab in zip(inputs0, inputs1, labels):
                 self.opt.zero_grad()
-                output = self.net(ex.unsqueeze(0))
-                loss = - F.nll_loss(self.logsoft(output), lab.unsqueeze(0),
+                output = self.net([ex0, ex1])
+                loss = - F.nll_loss(self.logsoft(output[0]), lab.unsqueeze(0),
                                     reduction='none')
                 exp_cond_prob = torch.mean(torch.exp(loss.detach().clone()))
                 loss = torch.mean(loss)
                 loss.backward()
                 fish += exp_cond_prob * self.net.get_grads() ** 2
 
-        fish /= (len(dataset.train_loader) * self.args.batch_size)
+        fish /= (len(train_loader) * self.args.batch_size)
 
         if self.fish is None:
             self.fish = fish
