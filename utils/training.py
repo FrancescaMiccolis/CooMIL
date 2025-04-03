@@ -164,11 +164,9 @@ def evaluate(model: ContinualModel, dataset: ContinualDataset, last=False):
         except:
             print('Error in AUC calculation')
             all_aucs = 0
-        wandb.log({"test/f1_score":f1_score_val,"test/all_auc": aucs,"test/accs": accs, "test/aucs_mask_classes": aucs_mask_classes, "test/micro_acc": micro_acc, "test/accs_mask_classes": accs_mask_classes, "test/micro_acc_mask_classes": micro_acc_mask_classes})
-        return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes, all_aucs]
+        return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes, all_aucs,f1_score_val]
     else:
-        wandb.log({"test/f1_score":f1_score_val,"test/all_auc": aucs,"test/accs": accs,  "test/micro_acc": micro_acc, "test/accs_mask_classes": accs_mask_classes, "test/micro_acc_mask_classes": micro_acc_mask_classes})
-        return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes]
+        return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes, f1_score_val]
         
 loss_fn = nn.CrossEntropyLoss()
 def evaluate_val(model: ContinualModel, dataset: ContinualDataset, k, epoch, results_dir, early_stopping = None):
@@ -351,6 +349,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
             print(f'micro mask acc:     {accs[3]}')
             print(f'auc:                {accs[5]}')
             print(f'multi-classes auc:  {accs[6]}')
+#            print(f'f1_score:           {accs[7]}')
             print('\n')
 
 
@@ -360,7 +359,8 @@ def train(model: ContinualModel, dataset: ContinualDataset,
             micro_acc_mask = accs[3]
             mean_auc = np.mean(accs[5])
             multi_class_auc = accs[6]
-  
+            wandb.log({"test/mean_auc": mean_auc,"test/mean_acc": mean_acc, "test/multi_class_auc": multi_class_auc, "test/micro_acc": micro_acc, "test/mean_acc_mask": mean_acc_mask, "test/micro_acc_mask_classes": micro_acc_mask})
+        
             # print_mean_accuracy(mean_acc, t + 1, dataset.SETTING)
 
             if args.csv_log:
@@ -397,7 +397,9 @@ def train(model: ContinualModel, dataset: ContinualDataset,
         micro_acc_mask = accs[3]
         mean_auc = np.mean(accs[5])
         multi_class_auc = accs[6]
-
+        wandb.log({"test/mean_auc": mean_auc,"test/mean_acc": mean_acc, "test/multi_class_auc": multi_class_auc, "test/micro_acc": micro_acc, "test/mean_acc_mask": mean_acc_mask, "test/micro_acc_mask_classes": micro_acc_mask})
+        
+            
         # print_mean_accuracy(mean_acc, t + 1, dataset.SETTING)
 
         if args.csv_log:
