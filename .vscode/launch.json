@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+
+            //vlm4wsi
+            //"args": ["--features_path", "/work/tesi_gcorso/work_humanitas/aida/features/features_plip/x20/",
+            //"--labels_path", "/work/tesi_gcorso/work_humanitas/aida/labels/aida_diagnosis.csv",
+            //"--split_path", "/work/tesi_gcorso/work_humanitas/aida/splits/split_aida_diagnosis.txt",
+            //"--model", "dualcoop", "--classnames", "adenocarcinoma", "squamous_cell_carcinoma",  "--n_prompts", "1",
+            //"--tumor_prompt", "An_H&E_image_of", "--normal_prompt", "An_H&E_image_of_normal_tissue",
+            //"--positive_prompt", "An_H&E_image_of", "--negative_prompt", "An_H&E_image_of_normal_tissue",
+            //"--output_dir", "/homes/gcorso/debugging_vlm4wsi",
+            //"--task", "localization"]
+
+            "args": ["--model", "ewc_on", "--dataset", "seq-wsi", "--exp_desc", "ewc_on", "--e_lambda", "0.1", "--gamma", "0.1"]  
+        
+
+
+        }
+    ]
+}
