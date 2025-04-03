@@ -48,24 +48,27 @@ class Lwf(ContinualModel):
         nc = get_dataset(args).N_TASKS * self.cpt
         self.eye = torch.tril(torch.ones((nc, nc))).bool().to(self.device)
 
-    def begin_task(self, dataset):
+    def begin_task(self, train_loader):
         self.net.eval()
         if self.current_task > 0:
             # warm-up
             # opt = SGD(self.net.classifier.parameters(), lr=self.args.lr)
-            opt = optim.Adam(self.net.classifiers.parameters(), lr=self.args.lr)
+            opt = optim.Adam(self.net.parameters(), lr=self.args.lr)
             for epoch in range(self.args.n_epochs):
-                for i, data in enumerate(dataset.train_loader):
+                for i, data in enumerate(train_loader):
                     # inputs, labels, not_aug_inputs = data
                     inputs0, inputs1, labels = data
                     inputs0, inputs1, labels = inputs0.to(self.device), inputs1.to(self.device), labels.to(self.device)
                     # inputs, labels = inputs.to(self.device), labels.to(self.device)
                     opt.zero_grad()
-                    with torch.no_grad():
-                        feats = self.net(inputs0, returnt='features')
+                    # with torch.no_grad():
+                        # feats = self.net([inputs0,inputs1], returnt='features')
+                    outputs= self.net([inputs0,inputs1])
+                    logits, _,_,_,_ = outputs
                     mask = self.eye[(self.current_task + 1) * self.cpt - 1] ^ self.eye[self.current_task * self.cpt - 1]
-                    outputs = self.net.classifiers(feats)[:, mask]
-                    loss = self.loss(outputs, labels - self.current_task * self.cpt)
+                    # outputs = self.net(feats)[:, mask]
+                    logits_masked= logits[:, mask]
+                    loss = self.loss(logits_masked, labels - self.current_task * self.cpt)
                     loss.backward()
                     opt.step()
 
@@ -73,13 +76,21 @@ class Lwf(ContinualModel):
             with torch.no_grad():
                 # import ipdb;ipdb.set_trace()
                 # for i in range(0, dataset.train_loader.dataset.data.shape[0], self.args.batch_size):
-                for i in range(0, len(dataset.train_loader.dataset), self.args.batch_size):
-                    inputs = torch.stack([dataset.train_loader.dataset.__getitem__(j)[0]
-                                          for j in range(i, min(i + self.args.batch_size,
-                                                         len(dataset.train_loader.dataset)))])[0]
-                    log = self.net(inputs.to(self.device))[0].cpu()
+                for i in range(0, len(train_loader.dataset), self.args.batch_size):
+                    batch = [train_loader.dataset.__getitem__(j) 
+                    for j in range(i, min(i + self.args.batch_size, len(train_loader.dataset)))]
+
+                    inputs0 = torch.stack([item[0] for item in batch])  # Extract inputs0
+                    inputs1 = torch.stack([item[1] for item in batch])  # Extract inputs1
+                    inputs0, inputs1 = inputs0.to(self.device), inputs1.to(self.device)
+                    inputs0=inputs0.squeeze(0)
+                    inputs1=inputs1.squeeze(0)
+                    # inputs = torch.stack([train_loader.dataset.__getitem__(j)[0]
+                    #                       for j in range(i, min(i + self.args.batch_size,
+                    #                                      len(train_loader.dataset)))])[0]
+                    log = self.net([inputs0,inputs1])[0].cpu()
                     logits.append(log)
-            setattr(dataset.train_loader.dataset, 'logits', torch.cat(logits))
+            setattr(train_loader.dataset, 'logits', torch.cat(logits))
         self.net.train()
 
         self.current_task += 1

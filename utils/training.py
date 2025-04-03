@@ -277,7 +277,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
             train_loader, val_loader, test_loader = dataset.get_data_loaders(args.fold[0])
             if hasattr(model, 'begin_task'):
   
-                model.begin_task(dataset)
+                model.begin_task(train_loader)
             if t:
                 accs = evaluate(model, dataset, last=True)
 
