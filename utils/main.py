@@ -128,17 +128,18 @@ def main(args):
                    name=str(args.model), mode=mode)
     args.wandb_url = wandb.run.get_url()
 
-    if isinstance(dataset, ContinualDataset):
-        train(model, dataset, args)
-    else:
-        assert not hasattr(model, 'end_task') or model.NAME == 'joint_gcl'
-        ctrain(args)
+        #IF da cambiare in base al nome del modello (solo derpp e conslide entrano qui)
+    # if isinstance(dataset, ContinualDataset):
+    train(model, dataset, args)
+    # else:
+    #     assert not hasattr(model, 'end_task') or model.NAME == 'joint_gcl'
+    # ctrain(args)
 
 
 if __name__ == '__main__':
     args = parse_args()
     args.logfolder="/work/H2020DeciderFicarra/fmiccolis/miccai_2025_workshop/outputs"
-    args.debug_mode= 0
+    args.debug_mode= 1
     
     experiments = []
     experiments += get_experiments(args)

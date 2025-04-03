@@ -157,16 +157,17 @@ def evaluate(model: ContinualModel, dataset: ContinualDataset, last=False):
 
     model.net.train(status)
     # import ipdb;ipdb.set_trace()
+    f1_score_val = f1_score(np.array(labels_list), [round(x) for x in np.concatenate(prob_list)[:, 2*k + 1]], average='weighted')
     if not last:
         try:
             all_aucs = roc_auc_score(np.array(all_labels_list), np.array(all_prob_list), multi_class='ovr')
         except:
             print('Error in AUC calculation')
             all_aucs = 0
-        wandb.log({"test/all_auc": aucs,"test/accs": accs, "test/aucs_mask_classes": aucs_mask_classes, "test/micro_acc": micro_acc, "test/accs_mask_classes": accs_mask_classes, "test/micro_acc_mask_classes": micro_acc_mask_classes})
+        wandb.log({"test/f1_score":f1_score_val,"test/all_auc": aucs,"test/accs": accs, "test/aucs_mask_classes": aucs_mask_classes, "test/micro_acc": micro_acc, "test/accs_mask_classes": accs_mask_classes, "test/micro_acc_mask_classes": micro_acc_mask_classes})
         return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes, all_aucs]
     else:
-        wandb.log({"test/all_auc": aucs,"test/accs": accs,  "test/micro_acc": micro_acc, "test/accs_mask_classes": accs_mask_classes, "test/micro_acc_mask_classes": micro_acc_mask_classes})
+        wandb.log({"test/f1_score":f1_score_val,"test/all_auc": aucs,"test/accs": accs,  "test/micro_acc": micro_acc, "test/accs_mask_classes": accs_mask_classes, "test/micro_acc_mask_classes": micro_acc_mask_classes})
         return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes]
         
 loss_fn = nn.CrossEntropyLoss()
@@ -290,7 +291,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
 
             scheduler = dataset.get_scheduler(model, args)
 
-            if 1:
+            if args.model == 'conslide' or args.model == 'derpp':
                 if t == 0:
                     for epoch in range(10):
                         loss = 0
@@ -306,7 +307,10 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                 for i, data in enumerate(train_loader):
                     inputs0, inputs1, labels = data
                     inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
-                    loss = model.observe(inputs0, inputs1, labels, t, ssl=False)
+                    if args.model == 'conslide' or args.model == 'derpp':
+                        loss = model.observe(inputs0, inputs1, labels, t, ssl=False)
+                    elif args.model == 'ewc_on' or args.model == 'lwf':
+                        loss = model.observe(inputs0, inputs1, labels)
 
                     progress_bar(i, len(train_loader), epoch, t, loss, args.fold[0])
 
