@@ -309,6 +309,8 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                         loss = model.observe(inputs0, inputs1, labels, t, ssl=False)
                     elif args.model == 'ewc_on' or args.model == 'lwf':
                         loss = model.observe(inputs0, inputs1, labels)
+                    elif args.model == 'er_ace' or args.model == 'gdumb':
+                        loss = model.observe(inputs0, inputs1, labels, inputs1)
 
                     progress_bar(i, len(train_loader), epoch, t, loss, args.fold[0])
 

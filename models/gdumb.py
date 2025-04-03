@@ -49,8 +49,8 @@ def fit_buffer(self, epochs):
 
         while len(all_inputs):
           optimizer.zero_grad()
-          buf_inputs, buf_labels = all_inputs[:self.args.batch_size], all_labels[:self.args.batch_size]
-          all_inputs, all_labels = all_inputs[self.args.batch_size:], all_labels[self.args.batch_size:]
+          #buf_inputs, buf_labels = all_inputs[:self.args.batch_size], all_labels[:self.args.batch_size]
+          #all_inputs, all_labels = all_inputs[self.args.batch_size:], all_labels[self.args.batch_size:]
 
           if self.args.cutmix_alpha is not None:
             inputs, labels_a, labels_b, lam = cutmix_data(x=buf_inputs.cpu(), y=buf_labels.cpu(), alpha=self.args.cutmix_alpha)
@@ -60,8 +60,10 @@ def fit_buffer(self, epochs):
             buf_outputs = self.net(buf_inputs)
             loss = lam * self.loss(buf_outputs, buf_labels_a) + (1 - lam) * self.loss(buf_outputs, buf_labels_b)
           else:        
-            buf_outputs = self.net(buf_inputs)
-            loss = self.loss(buf_outputs, buf_labels)
+            #buf_outputs = self.net(buf_inputs)
+            #loss = self.loss(buf_outputs, buf_labels)
+            buf_outputs = self.net([all_inputs[0], all_inputs[1]])
+            loss = self.loss(buf_outputs[0], all_labels)
 
           loss.backward()
           optimizer.step()
@@ -76,15 +78,17 @@ class GDumb(ContinualModel):
         self.buffer = Buffer(self.args.buffer_size, self.device)
         self.task = 0
 
-    def observe(self, inputs, labels, not_aug_inputs):
-        self.buffer.add_data(examples=not_aug_inputs,
-                             labels=labels)
+    def observe(self, inputs0, inputs1, labels, not_aug_inputs):
+        #self.buffer.add_data(examples=not_aug_inputs,
+        #                     labels=labels)
+        self.buffer.add_data(examples=[inputs0, inputs1],
+                                    labels=labels)
         return 0
 
     def end_task(self, dataset):
         # new model
         self.task += 1
-        if not (self.task == dataset.N_TASKS):
+        if not (self.task == 4):
             return
-        self.net = dataset.get_backbone().to(self.device)
+        #self.net = dataset.get_backbone().to(self.device)
         fit_buffer(self, self.args.fitting_epochs)

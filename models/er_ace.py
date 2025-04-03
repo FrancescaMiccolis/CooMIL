@@ -33,12 +33,12 @@ class ErACE(ContinualModel):
     def end_task(self, dataset):
         self.task += 1
         
-    def observe(self, inputs, labels, not_aug_inputs):
+    def observe(self, inputs0, inputs1, labels, not_aug_inputs):
 
         present = labels.unique()
         self.seen_so_far = torch.cat([self.seen_so_far, present]).unique()
 
-        logits = self.net(inputs)
+        logits = self.net([inputs0, inputs1])[0]
         mask = torch.zeros_like(logits)
         mask[:, present] = 1
 
@@ -56,14 +56,17 @@ class ErACE(ContinualModel):
             # sample from buffer
             buf_inputs, buf_labels = self.buffer.get_data(
                 self.args.minibatch_size, transform=self.transform)
-            loss_re = self.loss(self.net(buf_inputs), buf_labels)
+            loss_re = self.loss(self.net([buf_inputs[0], buf_inputs[1]])[0], buf_labels)
 
         loss += loss_re
 
         loss.backward()
         self.opt.step()
 
-        self.buffer.add_data(examples=not_aug_inputs,
-                             labels=labels)
+        #self.buffer.add_data(examples=not_aug_inputs,
+        #                     labels=labels)
+
+        self.buffer.add_data(examples=[inputs0, inputs1],
+                                    labels=labels)
 
         return loss.item()

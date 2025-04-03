@@ -167,7 +167,7 @@ class Generic_WSI_Classification_Dataset(Dataset):
     def __getitem__(self, idx):
         return None
 
-    def generate_split(self, data, fold, seed):
+    def generate_split(self, data):
 
         # test id if fold is one of the first three folds
         #test_filter = data["fold"] < 3
