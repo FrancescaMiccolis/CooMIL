@@ -86,8 +86,8 @@ class Lwf(ContinualModel):
 
     def observe(self, inputs0, inputs1, labels, not_aug_inputs=None, logits=None):
         self.opt.zero_grad()
-        outputs = self.net(inputs0)
-        # logits, Y_prob, Y_hat, _, instance_dict = outputs
+        outputs = self.net([inputs0,inputs1])
+        logits, _,_,_,_ = outputs
         # import ipdb;ipdb.set_trace()
 
         mask = self.eye[self.current_task * self.cpt - 1]

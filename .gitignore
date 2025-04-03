@@ -19,3 +19,6 @@ utils/experiments.py
 
 #Ignore results
 results/
+
+#Ignore main
+main.py
