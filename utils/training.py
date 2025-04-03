@@ -163,10 +163,10 @@ def evaluate(model: ContinualModel, dataset: ContinualDataset, last=False):
         except:
             print('Error in AUC calculation')
             all_aucs = 0
+        wandb.log({"test/all_auc": aucs,"test/accs": accs, "test/aucs_mask_classes": aucs_mask_classes, "test/micro_acc": micro_acc, "test/accs_mask_classes": accs_mask_classes, "test/micro_acc_mask_classes": micro_acc_mask_classes})
         return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes, all_aucs]
     else:
-        wandb.log({"all_auc": aucs,"accs": accs, "aucs_mask_classes": aucs_mask_classes, "micro_acc": micro_acc, "accs_mask_classes": accs_mask_classes, "micro_acc_mask_classes": micro_acc_mask_classes})
-        wandb.log({"all_auc": aucs,"accs": accs,  "micro_acc": micro_acc, "accs_mask_classes": accs_mask_classes, "micro_acc_mask_classes": micro_acc_mask_classes})
+        wandb.log({"test/all_auc": aucs,"test/accs": accs,  "test/micro_acc": micro_acc, "test/accs_mask_classes": accs_mask_classes, "test/micro_acc_mask_classes": micro_acc_mask_classes})
         return [accs, micro_acc, accs_mask_classes, micro_acc_mask_classes, aucs, aucs_mask_classes]
         
 loss_fn = nn.CrossEntropyLoss()
@@ -264,6 +264,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
     if model.NAME != 'icarl' and model.NAME != 'pnn':
        acc_random_results_class, micro_acc_random_results_class, acc_random_results_task, micro_acc_random_results_task, auc_random_results_class, _, all_auc_random_results_class = evaluate(model, dataset_copy)
        print(f'Random AUC = {all_auc_random_results_class}')
+       #wandb.log({"test/all_auc": all_auc_random_results_class,"test/accs": accs, "test/aucs_mask_classes": auc_random_results_class, "test/micro_acc": micro_acc_random_results_class, "test/accs_mask_classes": acc_random_results_class, "test/micro_acc_mask_classes": micro_acc_random_results_task})
     print(file=sys.stderr)
     if model.NAME != 'joint':
         for t in range(dataset.N_TASKS):

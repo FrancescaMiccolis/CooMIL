@@ -148,7 +148,14 @@ class Generic_WSI_Classification_Dataset(Dataset):
         if self.args.debug_mode:
             train_ids, val_ids, test_ids = self.generate_split_debug(data)
         else:
-            train_ids, val_ids, test_ids = self.generate_split(data, self.args.fold[0], self.seed)
+            ids = list(range(10))
+            ids.remove(self.args.fold[0])
+            val_id = np.random.choice(ids,1)[0]
+            self.val_fold=val_id   
+            print('Val fold id:',val_id)
+            print('Test fold id:',self.args.fold[0])
+            
+            train_ids, val_ids, test_ids = self.generate_split(data)
         assert len(set(train_ids).intersection(val_ids)) == 0
         assert len(set(val_ids).intersection(test_ids)) == 0
 
@@ -167,14 +174,10 @@ class Generic_WSI_Classification_Dataset(Dataset):
         #val_filter = data["fold"] == fold
         #train_filter = (data["fold"] > 3) & (data["fold"] != fold)
 
-        ids = list(range(10))
-        ids.remove(self.args.fold[0])
-        val_id = np.random.choice(ids,1)[0]
-        print('Val fold id:',val_id)
-        print('Test fold id:',self.args.fold[0])
+        
         test_filter = data["fold"] == self.args.fold[0]
-        val_filter = data["fold"] == val_id
-        train_filter = (data["fold"] != self.args.fold[0]) & (data["fold"] != val_id)
+        val_filter = data["fold"] == self.val_fold
+        train_filter = (data["fold"] != self.args.fold[0]) & (data["fold"] != self.val_fold)
 
         test_ids = data[test_filter].index
         val_ids = data[val_filter].index
