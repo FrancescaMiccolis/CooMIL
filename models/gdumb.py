@@ -49,8 +49,8 @@ def fit_buffer(self, epochs):
 
         while len(all_inputs):
           optimizer.zero_grad()
-          #buf_inputs, buf_labels = all_inputs[:self.args.batch_size], all_labels[:self.args.batch_size]
-          #all_inputs, all_labels = all_inputs[self.args.batch_size:], all_labels[self.args.batch_size:]
+          buf_inputs, buf_labels = all_inputs[:self.args.batch_size*2], all_labels[:self.args.batch_size]
+          all_inputs, all_labels = all_inputs[self.args.batch_size*2:], all_labels[self.args.batch_size:]
 
           if self.args.cutmix_alpha is not None:
             inputs, labels_a, labels_b, lam = cutmix_data(x=buf_inputs.cpu(), y=buf_labels.cpu(), alpha=self.args.cutmix_alpha)
@@ -62,12 +62,12 @@ def fit_buffer(self, epochs):
           else:        
             #buf_outputs = self.net(buf_inputs)
             #loss = self.loss(buf_outputs, buf_labels)
-            buf_outputs = self.net([all_inputs[0], all_inputs[1]])
-            loss = self.loss(buf_outputs[0], all_labels)
+            buf_outputs = self.net([buf_inputs[0], buf_inputs[1]])
+            loss = self.loss(buf_outputs[0], buf_labels)
 
           loss.backward()
           optimizer.step()
-        progress_bar(epoch, epochs, 1, 'G', loss.item())
+        #progress_bar(epoch, epochs, 1, 'G', loss.item())
 
 class GDumb(ContinualModel):
     NAME = 'gdumb'
