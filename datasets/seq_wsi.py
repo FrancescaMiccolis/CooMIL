@@ -835,10 +835,14 @@ class Sequential_Generic_MIL_Dataset(ContinualDataset):
         elif args.cam=="excluded":
             self.N_TASKS = 4
             self.datasets = [
-                Generic_MIL_Dataset(name="lung", csv_path='lung10fold_conch.csv',  args=self.args),
-                Generic_MIL_Dataset(name="brca", csv_path='brca10fold_conch.csv', args=self.args),
-                Generic_MIL_Dataset(name="kidney", csv_path='kidney10fold_conch.csv', args=self.args),
-                Generic_MIL_Dataset(name="esca", csv_path='esca10fold_conch.csv', args=self.args)
+                #Generic_MIL_Dataset(name="lung", csv_path='lung10fold_conch.csv',  args=self.args),
+                #Generic_MIL_Dataset(name="brca", csv_path='brca10fold_conch.csv', args=self.args),
+                #Generic_MIL_Dataset(name="kidney", csv_path='kidney10fold_conch.csv', args=self.args),
+                #Generic_MIL_Dataset(name="esca", csv_path='esca10fold_conch.csv', args=self.args)
+                Generic_MIL_Dataset(name="lung", csv_path='lung10fold_convnext.csv',  args=self.args),
+                Generic_MIL_Dataset(name="brca", csv_path='brca10fold_convnext.csv', args=self.args),
+                Generic_MIL_Dataset(name="kidney", csv_path='kidney10fold_convnext.csv', args=self.args),
+                Generic_MIL_Dataset(name="esca", csv_path='esca10fold_convnext.csv', args=self.args)
             ]
             self.class_names = ["Lung Adenocarcinoma", "Lung squamous cell carcinoma", 
                                 "Breast Invasive ductal","Breast Invasive lobular", 
@@ -848,10 +852,14 @@ class Sequential_Generic_MIL_Dataset(ContinualDataset):
         elif args.cam=="reverse_order":
             self.N_TASKS = 4
             self.datasets = [
-                Generic_MIL_Dataset(name="esca", csv_path='esca10fold_conch.csv', args=self.args),
-                Generic_MIL_Dataset(name="kidney", csv_path='kidney10fold_conch.csv', args=self.args),
-                Generic_MIL_Dataset(name="brca", csv_path='brca10fold_conch.csv', args=self.args),
-                Generic_MIL_Dataset(name="lung", csv_path='lung10fold_conch.csv',  args=self.args)
+                #Generic_MIL_Dataset(name="esca", csv_path='esca10fold_conch.csv', args=self.args),
+                #Generic_MIL_Dataset(name="kidney", csv_path='kidney10fold_conch.csv', args=self.args),
+                #Generic_MIL_Dataset(name="brca", csv_path='brca10fold_conch.csv', args=self.args),
+                #Generic_MIL_Dataset(name="lung", csv_path='lung10fold_conch.csv',  args=self.args)
+                Generic_MIL_Dataset(name="esca", csv_path='esca10fold_convnext.csv', args=self.args),
+                Generic_MIL_Dataset(name="kidney", csv_path='kidney10fold_convnext.csv', args=self.args),
+                Generic_MIL_Dataset(name="brca", csv_path='brca10fold_convnext.csv', args=self.args),
+                Generic_MIL_Dataset(name="lung", csv_path='lung10fold_convnext.csv',  args=self.args)
             ]
             self.class_names = [ "Esophageal squamous cell carcinoma","Esophageal adenocarcinoma",
                                 "Kidney papillary cell carcinoma","Kidney clear cell carcinoma",
@@ -863,14 +871,16 @@ class Sequential_Generic_MIL_Dataset(ContinualDataset):
         elif args.cam=="lung":
             self.N_TASKS = 1
             self.datasets = [
-                Generic_MIL_Dataset(name="lung", csv_path='lung10fold_conch.csv',  args=self.args)
+                #Generic_MIL_Dataset(name="lung", csv_path='lung10fold_conch.csv',  args=self.args)
+                Generic_MIL_Dataset(name="lung", csv_path='lung10fold_convnext.csv',  args=self.args)
             ]
             self.class_names = ["Lung Adenocarcinoma", "Lung squamous cell carcinoma"]
             self.task_names = [ "Lung"]
         elif args.cam=="brca":
             self.N_TASKS = 1
             self.datasets = [
-                Generic_MIL_Dataset(name="brca", csv_path='brca10fold_conch.csv', args=self.args)
+                #Generic_MIL_Dataset(name="brca", csv_path='brca10fold_conch.csv', args=self.args)
+                Generic_MIL_Dataset(name="brca", csv_path='brca10fold_convnext.csv', args=self.args)
             ]
             self.class_names = ["Breast Invasive ductal","Breast Invasive lobular"]
             self.task_names = [ "Breast"]
