@@ -316,7 +316,7 @@ class Block(nn.Module):
 class PatchEmbed(nn.Module):
     """ Image to Visual Word Embedding
     """
-    def __init__(self, img_size=224, patch_size=16, in_chans=3, outer_dim=768, inner_dim=24, inner_stride=4):
+    def __init__(self, img_size=224, patch_size=16, in_chans=3, outer_dim=512, inner_dim=24, inner_stride=4):
         super().__init__()
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
@@ -401,15 +401,15 @@ class HIT(nn.Module):
 
 
         self.skimpre = nn.Sequential(
-            nn.LayerNorm(768),
-            nn.Linear(768, 128),
+            nn.LayerNorm(512),
+            nn.Linear(512, 128),
             nn.LayerNorm(128),
             nn.GELU(),
             nn.Linear(128, 2),
         )
 
-        self.fc1 = nn.Sequential(nn.Linear(768, inner_dim), nn.ReLU())
-        self.fc2 = nn.Sequential(nn.Linear(768, inner_dim), nn.ReLU())
+        self.fc1 = nn.Sequential(nn.Linear(512, inner_dim), nn.ReLU())
+        self.fc2 = nn.Sequential(nn.Linear(512, inner_dim), nn.ReLU())
 
         init_skim_predictor([self.skimpre[-1]])
 

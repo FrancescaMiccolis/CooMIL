@@ -21,6 +21,16 @@ def base_path() -> str:
     return './results/'
 
 
+#def set_random_seed(seed: int) -> None:
+#    """
+#    Sets the seeds at a certain value.
+#    :param seed: the value to be set
+#    """
+#    random.seed(seed)
+#    np.random.seed(seed)
+#    torch.manual_seed(seed)
+#    torch.cuda.manual_seed_all(seed)
+
 def set_random_seed(seed: int) -> None:
     """
     Sets the seeds at a certain value.
@@ -30,3 +40,14 @@ def set_random_seed(seed: int) -> None:
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True  # Ensures deterministic behavior
+    torch.backends.cudnn.benchmark = False
+
+def seed_worker(worker_id):
+    # Generate a seed for the worker based on the initial seed
+    worker_seed = torch.initial_seed() % 2**32
+    # Set the seed for NumPy operations in the worker
+    np.random.seed(worker_seed)
+    # Set the seed for random number generation in the worker
+    random.seed(worker_seed)

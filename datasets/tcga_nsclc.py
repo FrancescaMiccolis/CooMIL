@@ -5,7 +5,7 @@
 import torch
 from torchvision.datasets import CIFAR10
 import torchvision.transforms as transforms
-from backbone.resnet18 import ResNet18 as resnet18
+#from backbone.resnet18 import ResNet18 as resnet18
 import torch.nn.functional as F
 from utils.conf import base_path
 from PIL import Image
@@ -100,10 +100,10 @@ class SequentialCIFAR10(ContinualDataset):
             [transforms.ToPILImage(), SequentialCIFAR10.TRANSFORM])
         return transform
 
-    @staticmethod
-    def get_backbone():
-        return resnet18(SequentialCIFAR10.N_CLASSES_PER_TASK
-                        * SequentialCIFAR10.N_TASKS)
+    #@staticmethod
+    #def get_backbone():
+    #    return resnet18(SequentialCIFAR10.N_CLASSES_PER_TASK
+    #                    * SequentialCIFAR10.N_TASKS)
 
     @staticmethod
     def get_loss():

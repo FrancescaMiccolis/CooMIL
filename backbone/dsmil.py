@@ -1,75 +1,62 @@
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
+from backbone.utils.modules import IClassifier, BClassifier, MILNet
+import torch
+from transformers import CLIPModel
+import copy
+__all__ = ['MILNetOriginal']
 
-class FCLayer(nn.Module):
-    def __init__(self, in_size, out_size):
-        super(FCLayer, self).__init__()
-        self.fc = nn.Sequential(nn.Linear(in_size, out_size))
-    def forward(self, feats):
-        x = self.fc(feats)
-        return feats, x
 
-class BClassifier(nn.Module):
-    def __init__(self, input_size, output_class, d_model=128, dropout_v=0.0, nonlinear=True, passing_v=False): # K, L, N
-        super(BClassifier, self).__init__()
-        if nonlinear:
-            self.q = nn.Sequential(nn.Linear(input_size, d_model), nn.ReLU(), nn.Linear(d_model, d_model), nn.Tanh())
+class MILNetOriginal(nn.Module):
+    def __init__(self, args, clip_model=None):
+        super(MILNetOriginal, self).__init__()
+        self.args = args
+        self.old_keys, self.old_dsmil = [], []
+        if self.args.dsmil_multiscale:
+            scale = 2
         else:
-            self.q = nn.Linear(input_size, d_model)
-        if passing_v:
-            self.v = nn.Sequential(
-                nn.Dropout(dropout_v),
-                nn.Linear(input_size, input_size),
-                nn.ReLU()
-            )
-        else:
-            self.v = nn.Identity()
-        
-        ### 1D convolutional layer that can handle multiple class (including binary)
-        self.fcc = nn.Conv1d(output_class, output_class, kernel_size=input_size)
-        
-    def forward(self, feats, c): # N x K, N x C
-        device = feats.device
-        V = self.v(feats) # N x V, unsorted
-        Q = self.q(feats).view(feats.shape[0], -1) # N x Q, unsorted
-        
-        # handle multiple classes without for loop
-        _, m_indices = torch.sort(c, 0, descending=True) # sort class scores along the instance dimension, m_indices in shape N x C
-        m_feats = torch.index_select(feats, dim=0, index=m_indices[0, :]) # select critical instances, m_feats in shape C x K 
-        q_max = self.q(m_feats) # compute queries of critical instances, q_max in shape C x Q
-        A = torch.mm(Q, q_max.transpose(0, 1)) # compute inner product of Q to each entry of q_max, A in shape N x C, each column contains unnormalized attention scores
-        A = F.softmax( A / torch.sqrt(torch.tensor(Q.shape[1], dtype=torch.float32, device=device)), 0) # normalize attention scores, A in shape N x C, 
-        B = torch.mm(A.transpose(0, 1), V) # compute bag representation, B in shape C x V
-                
-        B = B.view(1, B.shape[0], B.shape[1]) # 1 x C x V
-        C = self.fcc(B) # 1 x C x 1
-        C = C.view(1, -1)
-        return C, A, B 
-    
-class DSMIL(nn.Module):
-    def __init__(self, input_dim, output_dim):
-        super(DSMIL, self).__init__()
-        self.i_classifier = FCLayer(input_dim, output_dim)
-        self.b_classifier = BClassifier(input_size=input_dim, output_class=output_dim)
-        
-    def forward(self, x):
-        x = x["patch_features"]
-        feats, classes = self.i_classifier(x)
-        prediction_bag, A, B = self.b_classifier(feats.squeeze(dim=0), classes.squeeze(dim=0))
-        
-        # return classes, prediction_bag, A, B
-        return {'output': prediction_bag}
+            scale = 1
+        self.keys = nn.Parameter(nn.init.normal_(torch.empty(4, 512), std=0.02))
+        self.dsmil = MILNet(IClassifier(args.input_size*scale, args.n_classes), BClassifier(args.input_size*scale,  args.n_classes), args)
 
-class MILNet(nn.Module):
-    def __init__(self, i_classifier, b_classifier):
-        super(MILNet, self).__init__()
-        self.i_classifier = i_classifier
-        self.b_classifier = b_classifier
-        
+    def combine_old_new_predictions(self,old_bag_predictions,new_bag_predictions):
+        old_bag_predictions = torch.cat([item[:,idx*2:(idx+1)*2] for idx, item in enumerate(old_bag_predictions)], dim=1)
+        new_bag_predictions = new_bag_predictions[:,len(self.old_dsmil) * 2:]
+        bag_predictions = torch.cat([old_bag_predictions, new_bag_predictions], dim=1)
+        return bag_predictions
+
     def forward(self, x):
-        feats, classes = self.i_classifier(x)
-        prediction_bag, A, B = self.b_classifier(feats, classes)
-        
-        return classes, prediction_bag, A, B
-        
+        if len(self.old_dsmil) > 0:
+            old_bag_predictions = []
+            old_patches_predictions = []
+            for idx, old_dsmil in enumerate(self.old_dsmil):
+                old_prediction_bag, y_prob, _, _, classes, _,_ = old_dsmil(x)
+                old_bag_predictions.append(old_prediction_bag)
+                old_patches_predictions.append(classes)
+
+            new_prediction_bag, y_prob, y_hat, A, new_prediction_patch, B, proj= self.dsmil(x)
+            bag_predictions = self.combine_old_new_predictions(old_bag_predictions, new_prediction_bag)
+            patches_predictions = self.combine_old_new_predictions(old_patches_predictions, new_prediction_patch)
+        else:
+            bag_predictions, y_prob, y_hat, A, patches_predictions, B, proj= self.dsmil(x)
+        #proj=proj@ self.visual_projection.T
+        #proj = proj / proj.norm(dim=-1, keepdim=True)
+        keys= self.get_keys()
+        return  y_prob, y_hat,bag_predictions, A, patches_predictions, B, keys,proj
+
+    def freeze_keys(self, task):
+        self.old_keys.append(self.keys[task].detach().clone())
+        print("Freezing keys", str(task))
+        if not self.args.single_dsmil:
+            old_dsmil = copy.deepcopy(self.dsmil)
+            for param in old_dsmil.parameters():
+                param.requires_grad = False
+            self.old_dsmil.append(old_dsmil)
+
+    def get_keys(self):
+        if len(self.old_keys) > 0:
+            new = self.keys[len(self.old_keys):]
+            keys = torch.cat([torch.stack(self.old_keys), new])
+        else:
+            keys = self.keys
+        return keys
+
