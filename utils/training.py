@@ -139,10 +139,9 @@ def evaluate(model: ContinualModel, dataset: ContinualDataset, last=False):
     totals = 0
 
     for k, test_loader in enumerate(dataset.test_loaders):
-        #if last and k < len(dataset.test_loaders) - 1:
-        #    continue
-        if k > dataset.i - 1 and 'joint' not in model.NAME:
+        if k > dataset.i - 1:
             continue
+
         correct, correct_mask_classes, total = 0.0, 0.0, 0.0
         prob_list, mask_prob_list, labels_list = [], [], []
         for data in test_loader:
@@ -315,11 +314,13 @@ def train(model: ContinualModel, dataset: ContinualDataset,
     for t in range(dataset.N_TASKS):
         model.net.train()
         #_, _, _ = dataset_copy.get_data_loaders(args.test_fold)
-    if model.NAME != 'icarl' and model.NAME != 'pnn':
-       acc_random_results_class, micro_acc_random_results_class, acc_random_results_task, micro_acc_random_results_task, auc_random_results_class, _, all_auc_random_results_class = evaluate(model, dataset_copy)
-       print(f'Random AUC = {all_auc_random_results_class}')
-       #wandb.log({"test/all_auc": all_auc_random_results_class,"test/accs": accs, "test/aucs_mask_classes": auc_random_results_class, "test/micro_acc": micro_acc_random_results_class, "test/accs_mask_classes": acc_random_results_class, "test/micro_acc_mask_classes": micro_acc_random_results_task})
+    
+    dataset_copy.i = dataset.N_TASKS
+
+    acc_random_results_class, micro_acc_random_results_class, acc_random_results_task, micro_acc_random_results_task, auc_random_results_class, _, all_auc_random_results_class = evaluate(model, dataset_copy)
+    print(f'Random AUC = {all_auc_random_results_class}')
     print(file=sys.stderr)
+
     if 'joint' not in model.NAME:
         for t in range(dataset.N_TASKS):
             early_stopping = EarlyStopping(patience=10, stop_epoch=10, verbose=True, start_epoch=10)
