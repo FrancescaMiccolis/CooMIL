@@ -10,13 +10,13 @@ from utils.args import *
 #from utils.attention_maps import test_localization_coopmil
 #from utils.attention_maps import test_localization_coopmil_cam
 from sklearn.cluster import KMeans
-
+from argparse import ArgumentParser
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser(description='Continual learning coMIl')
     add_management_args(parser)
     add_experiment_args(parser)
     add_rehearsal_args(parser)
-    parser.add_argument('--dualcoopmultiscale', default=1, choices=[0, 1], type=int, help='Use multiscale')
+    # parser.add_argument('--dualcoopmultiscale', default=1, choices=[0, 1], type=int, help='Use multiscale')
     parser.add_argument('--passing_v', default=True, type=bool, help='passing v')
     parser.add_argument('--n_ctx', default=32, type=int, help='Use multiscale')
 

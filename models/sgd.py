@@ -5,7 +5,7 @@
 
 from utils.args import *
 from models.utils.continual_model import ContinualModel
-
+from argparse import ArgumentParser
 
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser(description='Continual Learning via'

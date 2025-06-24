@@ -94,13 +94,12 @@ def add_management_args(parser: ArgumentParser) -> None:
     parser.add_argument('--attenpool', default=False)
     parser.add_argument('--loss', default="ce")
     parser.add_argument('--bag_context', default=True)
-    parser.add_argument('--add_tumor_context', default=True)
-    parser.add_argument('--add_normal_context', default=False)
     parser.add_argument('--add_context_only_learnable', default=False)
+    parser.add_argument('--add_tumor_context', default=True)
+    parser.add_argument('--add_normal_context', default=True)
     parser.add_argument('--use_prompt_templates', default=True)
     parser.add_argument('--loss_on_task_logits', default=False)
     parser.add_argument("--n_clusters", type=int, default=14)
-
 
 def add_rehearsal_args(parser: ArgumentParser) -> None:
     """

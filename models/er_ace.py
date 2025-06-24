@@ -9,6 +9,7 @@ from utils.buffer import Buffer
 from utils.args import *
 from models.utils.continual_model import ContinualModel
 from datasets import get_dataset
+from argparse import ArgumentParser
 
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser(description='Continual learning via'

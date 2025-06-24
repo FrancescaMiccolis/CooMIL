@@ -394,7 +394,8 @@ def train(model: ContinualModel, dataset: ContinualDataset,
                         inputs0, inputs1, labels = data
                         inputs0, inputs1, labels = inputs0.to(model.device), inputs1.to(model.device), labels.to(model.device)
                         model.save_buffer(inputs0, inputs1, labels, t)
-
+            else:
+                print('Buffer not saved, using the model without buffer')
             if hasattr(model, 'end_task'):
                 model.end_task(train_loader)
 
@@ -436,7 +437,7 @@ def train(model: ContinualModel, dataset: ContinualDataset,
     else:
         #_, _, _ = dataset.get_joint_data_loaders(args.test_fold)
 
-        early_stopping = EarlyStopping(patience=10, stop_epoch=10, verbose=True, start_epoch=10)
+        early_stopping = EarlyStopping(patience=20, stop_epoch=20, verbose=True, start_epoch=20)
         #early_stopping = EarlyStopping(patience=5, stop_epoch=50, verbose=True,start_epoch=int((3/5)*self.args.n_epochs))
 
         results_dir = f'./checkpoints/{args.exp_desc}'

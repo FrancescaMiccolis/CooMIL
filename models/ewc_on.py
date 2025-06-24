@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from utils.args import *
 from models.utils.continual_model import ContinualModel
-
+from argparse import ArgumentParser
 
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser(description='Continual learning via'

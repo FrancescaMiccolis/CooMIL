@@ -174,7 +174,7 @@ class CoCoopMil(nn.Module):
         self.text_encoder.requires_grad_(False)
         self.old_keys, self.old_metas, self.old_dsmil = [], [], []
         self.initial_prompts = None
-        self.add_context = True
+        self.add_context = args.context
         self.dsmil_freezed = None
         self.logit_scale = nn.Parameter(torch.tensor(5.0))
         self.temperature=self.args.temperature
@@ -333,7 +333,7 @@ class CoCoopMil(nn.Module):
     def get_attentions(self, images, cls_id=None, task_mask=None, table=None, add_context=True):
         _, new_inputs0, upsampled = upsample(images)
         prompts, tokenized_prompts = self.prompt_learner(cls_id)
-        if self.args.dualcoopmultiscale:
+        if self.args.dualcoop_multiscale:
             input = upsampled + new_inputs0
         else:
             input = new_inputs0
@@ -357,7 +357,7 @@ class CoCoopMil(nn.Module):
         
         prompts, tokenized_prompts = self.prompt_learner(task_meta_token,task_mask,add_context)
         #prediction_bag,classes= torch.zeros(1, 8).cuda(), torch.zeros(10, 8).cuda()
-        if self.args.dualcoopmultiscale:
+        if self.args.dualcoop_multiscale:
             input = upsampled + new_inputs0
         else:
             input = new_inputs0

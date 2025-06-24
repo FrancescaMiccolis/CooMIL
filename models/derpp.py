@@ -7,7 +7,7 @@ from utils.buffer import Buffer
 from torch.nn import functional as F
 from models.utils.continual_model import ContinualModel
 from utils.args import *
-
+from argparse import ArgumentParser
 
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser(description='Continual learning via'
@@ -47,6 +47,7 @@ class Derpp(ContinualModel):
             # loss = self.loss(outputs[0], labels)
 
             if not self.buffer.is_empty():
+                
                 # import ipdb;ipdb.set_trace()
                 buf_inputs, _, buf_logits = self.buffer.get_data()
                 buf_outputs = self.net([buf_inputs[0], buf_inputs[1]])
@@ -64,5 +65,6 @@ class Derpp(ContinualModel):
                 self.buffer.add_data(examples=[inputs0, inputs1],
                                     labels=labels,
                                     logits=outputs[0])
-
+            else:
+                print("Buffer size is 0, not adding data to buffer.")
         return loss.item()

@@ -8,7 +8,7 @@ import math
 import numpy as np
 import bisect
 import wandb
-
+from argparse import ArgumentParser
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser(description='Continual learning via'
                                         ' Dark Experience Replay++.')

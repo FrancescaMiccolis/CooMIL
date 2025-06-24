@@ -7,6 +7,7 @@ from utils.args import *
 from models.utils.continual_model import ContinualModel
 from torch.optim import SGD, lr_scheduler
 import math
+from argparse import ArgumentParser
 from utils.buffer import Buffer
 import torch
 from utils.augmentations import cutmix_data

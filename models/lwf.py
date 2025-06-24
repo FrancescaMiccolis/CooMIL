@@ -10,7 +10,7 @@ from torch.optim import SGD
 from utils.args import *
 import torch.optim as optim
 from models.utils.continual_model import ContinualModel
-
+from argparse import ArgumentParser
 
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser(description='Continual learning via'

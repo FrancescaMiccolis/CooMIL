@@ -9,13 +9,13 @@ from models.utils.continual_model import ContinualModel, ContinualModelCoCoopMil
 from utils.args import *
 #from utils.evaluate import evaluate_val, EarlyStopping
 #from utils.evaluate import evaluate_test
-
+from argparse import ArgumentParser
 def get_parser():
     parser = ArgumentParser(description='joint')
     add_management_args(parser)
     add_experiment_args(parser)
     add_rehearsal_args(parser)
-    parser.add_argument('--dualcoopmultiscale', default=1, choices=[0, 1], type=int, help='Use multiscale')
+    # parser.add_argument('--dualcoopmultiscale', default=1, choices=[0, 1], type=int, help='Use multiscale')
     parser.add_argument('--passing_v', default=True, type=bool, help='passing v')
     parser.add_argument('--n_ctx', default=32, type=int, help='Use multiscale')
     return parser
