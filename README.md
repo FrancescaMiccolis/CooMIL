@@ -8,31 +8,24 @@ We mainly follow the pipeline of [CLAM](https://github.com/mahmoodlab/CLAM). The
 ## Training Example
 
 ```
-python utils/main.py --state train --model conslide --dataset seq-wsi --exp_desc conslide --buffer_size 1100 --alpha 0.2 --beta 0.2
+python -u utils/main.py --model cocoopmil_continual --dataset seq-wsi --exp_desc cocoopmil_continual --n_epochs 50
+python -u utils/main.py --model cocoopmil_naive --dataset seq-wsi --exp_desc cocoopmil_naive --n_epochs 50
+python -u utils/main.py --model cocoopmil_joint --dataset seq-wsi --exp_desc cocoopmil_joint --n_epochs 200
+
+python -u utils/main.py --model gdumb --dataset seq-wsi --exp_desc gdumb --buffer_size 1100 
+python -u utils/main.py --model er_ace --dataset seq-wsi --exp_desc er_ace --buffer_size 1100 --n_epochs 50 
+
+python -u utils/main.py --model lwf --dataset seq-wsi --exp_desc lwf --alpha 0.2
+python -u utils/main.py --model ewc_on --dataset seq-wsi --exp_desc ewc_on --e_lambda 0.1 --gamma 0.1
+python -u utils/main.py --model derpp --dataset seq-wsi --exp_desc derpp --alpha 0.2 --beta 0.2 --n_epochs 50 --buffer_size 1100
+python -u utils/main.py --model derpp --dataset seq-wsi --exp_desc derpp --alpha 0.2 --beta 0.2 --n_epochs 50 --buffer_size 0
+
+python -u utils/main.py --model conslide --dataset seq-wsi --exp_desc conslide --alpha 0.2 --beta 0.2 --n_epochs 50 --buffer_size 1100
+python -u utils/main.py --model conslide --dataset seq-wsi --exp_desc conslide --alpha 0.2 --beta 0.2 --n_epochs 50 --buffer_size 0 
+
 ```
 
-## Updates / TODOs
-Please follow this GitHub for more updates.
 
-- [ ] Refine the code.
-- [ ] Provide code for data preparation.
-- [ ] Remove dead code.
-- [ ] Better documentation on interpretability code example.
-
-## Reference
-If you find our work useful in your research please consider citing our [paper](https://openaccess.thecvf.com/content/ICCV2023/html/Huang_ConSlide_Asynchronous_Hierarchical_Interaction_Transformer_with_Breakup-Reorganize_Rehearsal_for_Continual_ICCV_2023_paper.html):
-
-Huang, Y., Zhao, W., Wang, S., Fu, Y., Jiang, Y., & Yu, L. (2023). ConSlide: Asynchronous Hierarchical Interaction Transformer with Breakup-Reorganize Rehearsal for Continual Whole Slide Image Analysis. In Proceedings of the IEEE/CVF International Conference on Computer Vision (pp. 21349-21360).
-
-```
-@inproceedings{huang2023conslide,
-  title={ConSlide: Asynchronous Hierarchical Interaction Transformer with Breakup-Reorganize Rehearsal for Continual Whole Slide Image Analysis},
-  author={Huang, Yanyan and Zhao, Weiqin and Wang, Shujun and Fu, Yu and Jiang, Yuming and Yu, Lequan},
-  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
-  pages={21349--21360},
-  year={2023}
-}
-```
 
 ## Acknowledgements
 
