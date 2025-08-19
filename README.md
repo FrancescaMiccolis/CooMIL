@@ -1,5 +1,5 @@
-# ConSlide
-[ICCV 2023] ConSlide: Asynchronous Hierarchical Interaction Transformer with Breakup-Reorganize Rehearsal for Continual Whole Slide Image Analysis.
+# CooMIL
+Context-guided Prompt-learning for Continual WSI Classification
 
 ## Training Data Preparation
 
@@ -29,4 +29,4 @@ python -u utils/main.py --model conslide --dataset seq-wsi --exp_desc conslide -
 
 ## Acknowledgements
 
-Framework code for Continual Learning was largely adapted via making modifications to [Mammoth](https://github.com/aimagelab/mammoth)
+Framework code for Continual Learning was largely adapted via making modifications to [ConSlide]([https://github.com/HKU-MedAI/ConSlide])
