@@ -470,35 +470,7 @@ class Sequential_Generic_MIL_Dataset(ContinualDataset):
     def __init__(self, args):
 
         super(Sequential_Generic_MIL_Dataset, self).__init__(args)
-        if args.cam=="only":
-            self.N_TASKS=1
-            self.datasets = [
-
-                #data_path="/work/H2020DeciderFicarra/gbontempo/feats/camplit_23"
-                CamDataset(self.args.data_path,args=self.args),
-                #Generic_MIL_Dataset(name="lung", csv_path='lung10fold.csv',  args=self.args),
-                #Generic_MIL_Dataset(name="brca", csv_path='brca10fold.csv', args=self.args),
-                #Generic_MIL_Dataset(name="kidney", csv_path='kidney10fold.csv', args=self.args),
-                #Generic_MIL_Dataset(name="esca", csv_path='esca10fold.csv', args=self.args)
-            ]
-            self.class_names = ["Breast cancer metastases"]
-            self.task_names=["Breast"]
-
-        elif args.cam=="both":
-            self.N_TASKS = 5
-            
-            self.datasets = [
-                CamDataset("/work/H2020DeciderFicarra/gbontempo/feats/camplit_23", args=self.args),
-                Generic_MIL_Dataset(name="lung", csv_path='lung10fold.csv',  args=self.args),
-                Generic_MIL_Dataset(name="brca", csv_path='brca10fold.csv', args=self.args),
-                Generic_MIL_Dataset(name="kidney", csv_path='kidney10fold.csv', args=self.args),
-                Generic_MIL_Dataset(name="esca", csv_path='esca10fold.csv', args=self.args)
-            ]
-            self.class_names = ["Breast normal","Breast cancer metastases","Lung Adenocarcinoma", "Lung squamous cell carcinoma", "Breast Invasive ductal",
-                           "Breast Invasive lobular", "Kidney clear cell carcinoma", "Kidney papillary cell carcinoma",
-                           "Esophageal adenocarcinoma", "Esophageal squamous cell carcinoma"]
-            self.task_names = ["Breast", "Lung", "Breast", "Kidney", "Esca"]
-        elif args.cam=="excluded":
+        if args.cam=="normal_order":
             self.N_TASKS = 4
             self.datasets = [
                 Generic_MIL_Dataset(name="lung", csv_path='lung10fold_conch.csv',  args=self.args),

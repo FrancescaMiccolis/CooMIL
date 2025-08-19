@@ -23,7 +23,6 @@ import submitit
 from utils.args import add_management_args
 from utils.experiments import * 
 from datasets import ContinualDataset
-from utils.continual_training import train as ctrain
 from datasets import get_dataset
 from models import get_model
 from utils.training import train
@@ -88,7 +87,7 @@ def parse_args():
     if args.seed is not None:
         set_random_seed(args.seed)
 
-    #args.cam = "excluded"
+    #args.cam = "normal_order"
     args.cam = "reverse_order"
     
 
@@ -137,12 +136,9 @@ def main(args):
             wandb.run.name = wandb.run.name + "_reverse"
     args.wandb_url = wandb.run.get_url()
 
-        #IF da cambiare in base al nome del modello (solo derpp e conslide entrano qui)
-    # if isinstance(dataset, ContinualDataset):
+    
     train(model, dataset, args)
-    # else:
-    #     assert not hasattr(model, 'end_task') or model.NAME == 'joint_gcl'
-    # ctrain(args)
+
 
 
 if __name__ == '__main__':
@@ -151,23 +147,19 @@ if __name__ == '__main__':
     args.debug_mode= 0
     args.save_buffer=1
     experiments = []
-    experiments += get_experiments(args) #gpu_RTX6000_24G|gpu_RTXA5000_24G|
+    experiments += get_experiments(args)
     executor = submitit.AutoExecutor(folder=args.logfolder,slurm_max_num_timeout=30)
     executor.update_parameters(mem_gb=experiments[0].mem, slurm_gpus_per_task=1, tasks_per_node=1, cpus_per_task=1, nodes=1,
-                                timeout_min=120,slurm_signal_delay_s=300, slurm_array_parallelism=7) #if only 48G GPUs: partition : boost_usr_prod
+                                timeout_min=120,slurm_signal_delay_s=300, slurm_array_parallelism=7)
     if args.debug_mode:
         executor.update_parameters(name="debug")
         print(experiments[0])
-        # job_name = f"{args.model}_Fold{experiments[0].test_fold[0]}" 
-        # print(job_name)# %j is the SLURM job ID
-        executor.update_parameters(timeout_min=30)
-        # main(experiments[0])
+        main(experiments[0])
     else:
         job_name = f"{args.model}" # _Fold{experiments[0].test_fold[0]}"  # %j is the SLURM job ID
         executor.update_parameters(name=job_name)
         #executor.map_array(main, experiments)
         for exp in experiments:
-
             executor.submit(main, exp)
             print(f'Experiment {exp} submitted')
 
