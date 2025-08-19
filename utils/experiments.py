@@ -4,15 +4,12 @@ import itertools
 def get_experiments(args):
     args1 = copy.copy(args)
     args1.mem = 120
-    # args1.model="conslide"
     args1.dataset = "seq-wsi"
-    # args1.exp_desc= "conslide"
     args1.exp_desc= args.model
-    # args1.buffer_size=1100
     args1.alpha=0.2
     args1.seed = 12
     args1.beta=0.2
-    hyperparameters = [[0,1,2,3,4,5,6,7,8,9],[5,6,7,8,9,0,1,2,3,4]] #[[5,6,7,8,9],[0,1,2,3,4]] #[[5,6,7,8,9,0,1,2,3,4],[0,1,2,3,4,5,6,7,8,9]] # [[5,6,7,8,9],[0,1,2,3,4]] # 5,6,,9[[6]] # #[[6],[1]] 
+    hyperparameters = [[0,1,2,3,4,5,6,7,8,9],[5,6,7,8,9,0,1,2,3,4]]  
     args_list = []
     for element0, element1 in zip(*hyperparameters):
         args2 = copy.copy(args1)

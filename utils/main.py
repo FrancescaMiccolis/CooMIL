@@ -88,8 +88,8 @@ def parse_args():
     if args.seed is not None:
         set_random_seed(args.seed)
 
-    args.cam = "excluded"
-    #args.cam = "reverse_order"
+    #args.cam = "excluded"
+    args.cam = "reverse_order"
     
 
     args.test_on_val = False
@@ -127,12 +127,12 @@ def main(args):
     args.wandb_tag=args.model
     mode = 'disabled' if args.debug_mode else 'online'
     if args.save_buffer == 1:
-        wandb.init(project='miccai_coomil_paper', entity='miccai_coomil', config=vars(args),tags=[args.wandb_tag],
-                   name=str(args.model)+'_conch', mode=mode)
+        wandb.init(project='coomil_conch', entity='coomil', config=vars(args),tags=[args.wandb_tag],
+                   name=str(args.model), mode=mode)
 
     else:
-        wandb.init(project='miccai_coomil_paper', entity='miccai_coomil', config=vars(args),tags=[args.wandb_tag],
-                   name=str(args.model)+'_conch_no_buffer', mode=mode, save_code=True)
+        wandb.init(project='coomil_conch', entity='coomil', config=vars(args),tags=[args.wandb_tag],
+                   name=str(args.model)+'_no_buffer', mode=mode, save_code=True)
     if args.cam == "reverse_order":
             wandb.run.name = wandb.run.name + "_reverse"
     args.wandb_url = wandb.run.get_url()
@@ -147,16 +147,14 @@ def main(args):
 
 if __name__ == '__main__':
     args = parse_args()
-    args.logfolder="/work/H2020DeciderFicarra/fmiccolis/miccai_2025_workshop/outputs"
+    args.logfolder="./outputs"
     args.debug_mode= 0
     args.save_buffer=1
     experiments = []
     experiments += get_experiments(args) #gpu_RTX6000_24G|gpu_RTXA5000_24G|
     executor = submitit.AutoExecutor(folder=args.logfolder,slurm_max_num_timeout=30)
     executor.update_parameters(mem_gb=experiments[0].mem, slurm_gpus_per_task=1, tasks_per_node=1, cpus_per_task=1, nodes=1,
-                               slurm_additional_parameters={"cpus-per-task": 1, "account": "ficarra_aida", "constraint": "gpu_RTX6000_24G|gpu_RTXA5000_24G|gpu_A40_48G|gpu_L40S_48G"}, #gpu_RTX6000_24G|gpu_RTXA5000_24G|gpu_RTX6000_24G|gpu_RTXA5000_24G|gpu_RTX6000_24G|gpu_RTXA5000_24G|
-                               timeout_min=300,
-                               slurm_partition="all_usr_prod", slurm_signal_delay_s=300, slurm_array_parallelism=7) #if only 48G GPUs: partition : boost_usr_prod
+                                timeout_min=120,slurm_signal_delay_s=300, slurm_array_parallelism=7) #if only 48G GPUs: partition : boost_usr_prod
     if args.debug_mode:
         executor.update_parameters(name="debug")
         print(experiments[0])
@@ -169,9 +167,7 @@ if __name__ == '__main__':
         executor.update_parameters(name=job_name)
         #executor.map_array(main, experiments)
         for exp in experiments:
-            #print(f'Starting experiment {exp}')
-            # print(exp)
+
             executor.submit(main, exp)
-            # print(f'Experiment {exp} submitted')
-    # for fold in range(5,10,1):
-    #     main(fold=fold)
+            print(f'Experiment {exp} submitted')
+
