@@ -3,7 +3,7 @@ Context-guided Prompt-learning for Continual WSI Classification
 
 ## Training Data Preparation
 
-We mainly follow the pipeline of [CLAM](https://github.com/mahmoodlab/CLAM), in particular we use the followinf line to extract tiles of regions and patches:
+We mainly follow the pipeline of [CLAM](https://github.com/mahmoodlab/CLAM), in particular we use the following code to extract tiles of regions and patches:
 ```
 python create_patches_fp.py --source DATA_DIRECTORY --save_dir RESULTS_DIRECTORY --patch_size 256 --seg --patch --stitch 
 ```
